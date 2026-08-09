@@ -5,6 +5,7 @@ A tool for real-time testing of encoder settings.
 Change encoder parameters on the fly and hear the difference immediately - no interruptions.
 
 ---
+![GitHub all releases](https://img.shields.io/github/downloads/hat3k/Codec-Playground-H/total)
 
 ## What it does
 
@@ -144,16 +145,6 @@ This tool was built to make that exploration immediate and interactive.
 - **Hear the difference instantly** - change `-V 0` to `-V 6` while the music plays
 - **Discover what each parameter actually does**
 - **Find the optimal settings** for your ears and your files
-
----
-
-## How it works
-
-1. Audio is loaded into memory
-2. LAME encodes it with your current settings
-3. The MP3 is decoded back to PCM
-4. Both streams play in sync with automatic delay compensation
-5. Change any setting - the process repeats seamlessly without stopping playback
 
 ---
 
