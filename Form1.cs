@@ -19,7 +19,7 @@ namespace Codec_Playground_H
         private AppSettings _settings = new();
         private bool _isLoadingSettings = false;
         private readonly string _tempFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Temp");
-        private const string APP_VERSION = "2026.08.09";
+        private const string APP_VERSION = "2026.08.10";
 
         private static readonly int[] CbrBitrates = [8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
         private static readonly int[] AbrBitrates = [8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
@@ -75,14 +75,16 @@ namespace Codec_Playground_H
         private CancellationTokenSource? _encodingCts;
         private Task? _currentEncodingTask;
         private string? _selectedEncoderPath;
-        private readonly Dictionary<string, string> _encodedCache = new();
-        private readonly Dictionary<string, float[]> _decodedCache = new();
-        private readonly Dictionary<string, int> _delayCache = new();
+        private readonly Dictionary<string, string> _encodedCache = [];
+        private readonly Dictionary<string, float[]> _decodedCache = [];
+        private readonly Dictionary<string, int> _delayCache = [];
         private readonly Lock _cacheLock = new();
         private string? _currentCacheKey = null;
 
         private bool _needsReencoding = false;
         private bool _pendingPlayAfterEncode = false;
+        private EncodingStatus _lastLoggedStatus = EncodingStatus.Idle;
+        private bool _lastSeamlessState = false;
 
         public class GitHubRelease
         {
@@ -99,7 +101,7 @@ namespace Codec_Playground_H
             public string HtmlUrl { get; set; } = "";
 
             [JsonPropertyName("assets")]
-            public List<GitHubAsset> Assets { get; set; } = new();
+            public List<GitHubAsset> Assets { get; set; } = [];
 
             [JsonPropertyName("body")]
             public string Body { get; set; } = "";
@@ -156,6 +158,388 @@ namespace Codec_Playground_H
             Log("✅ Form1_Load completed");
         }
 
+        private void SaveSettings()
+        {
+            Log($"💾 Saving settings to {_settingsFilePath}");
+            try
+            {
+                Log($"📊 Saving {listViewEncoders.Items.Count} encoders");
+                _settings.EncoderPaths = [.. listViewEncoders.Items
+            .Cast<ListViewItem>()
+            .Select(item => item.Tag?.ToString() ?? string.Empty)
+            .Where(path => !string.IsNullOrEmpty(path))];
+
+                Log($"📊 Saving {listViewAudioFiles.Items.Count} audio files");
+                _settings.AudioFilePaths = [.. listViewAudioFiles.Items
+            .Cast<ListViewItem>()
+            .Select(item => item.Tag?.ToString() ?? string.Empty)
+            .Where(path => !string.IsNullOrEmpty(path))];
+
+                _settings.SelectedEncoderPath = _selectedEncoderPath;
+                _settings.SelectedAudioFilePath = _originalFilePath;
+                _settings.LoopPlayback = _loopPlayback;
+                _settings.CurrentPlayMode = _currentPlayMode;
+                _settings.EncoderSettings.MixBalanceValue = trackBarMixBalance.Value;
+                _settings.CheckForUpdates = checkBoxCheckForUpdates.Checked;
+
+                _settings.EncoderSettings.ModeCBR_MP3 = radioButtonModeCBR_MP3.Checked;
+                _settings.EncoderSettings.ModeABR_MP3 = radioButtonModeABR_MP3.Checked;
+                _settings.EncoderSettings.ModeVBR_MP3 = radioButtonModeVBR_MP3.Checked;
+
+                _settings.EncoderSettings.CBRValue_MP3 = trackBarCBR_MP3.Value;
+                _settings.EncoderSettings.ABRValue_MP3 = trackBarABR_MP3.Value;
+                _settings.EncoderSettings.VBRValue_MP3 = trackBarVBR_MP3.Value;
+                _settings.EncoderSettings.QualityValue_MP3 = trackBarParameter_q_MP3.Value;
+
+                _settings.EncoderSettings.UseQuality_MP3 = checkBoxParameter_q_MP3.Checked;
+                _settings.EncoderSettings.UseChannelModes_MP3 = checkBoxChannelsModes_MP3.Checked;
+
+                _settings.EncoderSettings.ChannelJointStereo_MP3 = radioButtonJointStereo_MP3.Checked;
+                _settings.EncoderSettings.ChannelStereo_MP3 = radioButtonStereo_MP3.Checked;
+                _settings.EncoderSettings.ChannelMono_MP3 = radioButtonMono_MP3.Checked;
+
+                _settings.EncoderSettings.LabelCBR_MP3 = labelCBRValue_MP3.Text;
+                _settings.EncoderSettings.LabelABR_MP3 = labelABRValue_MP3.Text;
+                _settings.EncoderSettings.LabelVBR_MP3 = labelVBRValue_MP3.Text;
+                _settings.EncoderSettings.LabelQuality_MP3 = labelParameter_qValue_MP3.Text;
+
+                _settings.UserPresets.UserPreset1 = radioButtonUserPreset1.Checked;
+                _settings.UserPresets.UserPreset1Name = radioButtonUserPreset1.Text;
+                _settings.UserPresets.UserPreset1CommandLineArgs = textBoxUserPreset1.Text;
+
+                _settings.UserPresets.UserPreset2 = radioButtonUserPreset2.Checked;
+                _settings.UserPresets.UserPreset2Name = radioButtonUserPreset2.Text;
+                _settings.UserPresets.UserPreset2CommandLineArgs = textBoxUserPreset2.Text;
+
+                _settings.UserPresets.UserPreset3 = radioButtonUserPreset3.Checked;
+                _settings.UserPresets.UserPreset3Name = radioButtonUserPreset3.Text;
+                _settings.UserPresets.UserPreset3CommandLineArgs = textBoxUserPreset3.Text;
+
+                _settings.UserPresets.UserPreset4 = radioButtonUserPreset4.Checked;
+                _settings.UserPresets.UserPreset4Name = radioButtonUserPreset4.Text;
+                _settings.UserPresets.UserPreset4CommandLineArgs = textBoxUserPreset4.Text;
+
+                _settings.UserPresets.UserPreset5 = radioButtonUserPreset5.Checked;
+                _settings.UserPresets.UserPreset5Name = radioButtonUserPreset5.Text;
+                _settings.UserPresets.UserPreset5CommandLineArgs = textBoxUserPreset5.Text;
+
+                _settings.UserPresets.UserPreset6 = radioButtonUserPreset6.Checked;
+                _settings.UserPresets.UserPreset6Name = radioButtonUserPreset6.Text;
+                _settings.UserPresets.UserPreset6CommandLineArgs = textBoxUserPreset6.Text;
+
+                Log($"📊 Saved user presets: 1={_settings.UserPresets.UserPreset1}, 2={_settings.UserPresets.UserPreset2}, 3={_settings.UserPresets.UserPreset3}, 4={_settings.UserPresets.UserPreset4}, 5={_settings.UserPresets.UserPreset5}, 6={_settings.UserPresets.UserPreset6}");
+
+                _settings.HiddenModeMP3Off = radioButton_Hidden_Mode_OFF_MP3.Checked;
+                _settings.HiddenUserPresetOff = radioButton_Hidden_UserPreset_OFF.Checked;
+
+                Log($"📊 Saved hidden radio states: ModeMP3Off={_settings.HiddenModeMP3Off}, UserPresetOff={_settings.HiddenUserPresetOff}");
+
+                _settings.EncoderListView.ColumnWidths = [];
+                foreach (ColumnHeader col in listViewEncoders.Columns)
+                {
+                    _settings.EncoderListView.ColumnWidths.Add(col.Width);
+                }
+                Log($"📊 Saved {_settings.EncoderListView.ColumnWidths.Count} encoder column widths");
+
+                _settings.AudioListView.ColumnWidths = [];
+                foreach (ColumnHeader col in listViewAudioFiles.Columns)
+                {
+                    _settings.AudioListView.ColumnWidths.Add(col.Width);
+                }
+                Log($"📊 Saved {_settings.AudioListView.ColumnWidths.Count} audio column widths");
+
+                if (WindowState != FormWindowState.Maximized)
+                {
+                    _settings.Window.Width = Width;
+                    _settings.Window.Height = Height;
+                    _settings.Window.X = Location.X;
+                    _settings.Window.Y = Location.Y;
+                    Log($"📊 Window position: ({Location.X}, {Location.Y}) size: {Width}x{Height}");
+                }
+                else
+                {
+                    var bounds = RestoreBounds;
+                    _settings.Window.Width = bounds.Width;
+                    _settings.Window.Height = bounds.Height;
+                    _settings.Window.X = bounds.X;
+                    _settings.Window.Y = bounds.Y;
+                    Log($"📊 Window maximized, restoring to: ({bounds.X}, {bounds.Y}) size: {bounds.Width}x{bounds.Height}");
+                }
+                _settings.Window.Maximized = WindowState == FormWindowState.Maximized;
+                Log($"📊 Window maximized: {_settings.Window.Maximized}");
+
+                JsonSerializerOptions options = new()
+                {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+                string json = JsonSerializer.Serialize(_settings, options);
+                File.WriteAllText(_settingsFilePath, json);
+                Log($"✅ Settings saved successfully ({json.Length} bytes)");
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ Failed to save settings: {ex.Message}");
+                Log($"❌ StackTrace: {ex.StackTrace}");
+            }
+        }
+        private void LoadSettings()
+        {
+            Log($"📂 Loading settings from {_settingsFilePath}");
+            try
+            {
+                if (!File.Exists(_settingsFilePath))
+                {
+                    Log($"ℹ️ Settings file not found, using defaults");
+                    MinimumSize = new Size(874, 515);
+                    return;
+                }
+
+                _isLoadingSettings = true;
+                string json = File.ReadAllText(_settingsFilePath);
+                Log($"📄 Settings file size: {json.Length} bytes");
+                JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
+                _settings = JsonSerializer.Deserialize<AppSettings>(json, options) ?? new AppSettings();
+                Log($"✅ Settings deserialized successfully");
+
+                Log($"📊 Loading {_settings.EncoderPaths.Count} encoders");
+                listViewEncoders.Items.Clear();
+                foreach (string encoderPath in _settings.EncoderPaths)
+                {
+                    if (!File.Exists(encoderPath))
+                    {
+                        Log($"⚠️ Encoder file not found: {encoderPath}");
+                        continue;
+                    }
+                    (string? name, string? version) = GetEncoderInfo(encoderPath);
+                    ListViewItem item = new(name) { Tag = encoderPath, Checked = false };
+                    _ = item.SubItems.Add(version);
+                    _ = item.SubItems.Add(Path.GetDirectoryName(encoderPath) ?? string.Empty);
+                    _ = listViewEncoders.Items.Add(item);
+                    Log($"✅ Added encoder: {name} version {version}");
+                }
+
+                if (_settings.EncoderListView.ColumnWidths.Count == listViewEncoders.Columns.Count)
+                {
+                    for (int i = 0; i < listViewEncoders.Columns.Count; i++)
+                    {
+                        listViewEncoders.Columns[i].Width = _settings.EncoderListView.ColumnWidths[i];
+                    }
+                    Log($"✅ Restored {_settings.EncoderListView.ColumnWidths.Count} encoder column widths");
+                }
+                else
+                {
+                    Log($"⚠️ Encoder column count mismatch: saved {_settings.EncoderListView.ColumnWidths.Count}, actual {listViewEncoders.Columns.Count}");
+                }
+
+                Log($"📊 Loading {_settings.AudioFilePaths.Count} audio files");
+                listViewAudioFiles.Items.Clear();
+                foreach (string audioPath in _settings.AudioFilePaths)
+                {
+                    if (!File.Exists(audioPath))
+                    {
+                        Log($"⚠️ Audio file not found: {audioPath}");
+                        continue;
+                    }
+                    ListViewItem item = new(Path.GetFileName(audioPath)) { Tag = audioPath, Checked = false };
+
+                    try
+                    {
+                        int channels = 0, bitsPerSample = 0, sampleRate = 0;
+                        double durationSec = 0;
+                        string ext = Path.GetExtension(audioPath);
+
+                        if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
+                        {
+                            using var wavReader = new WaveFileReader(audioPath);
+                            channels = wavReader.WaveFormat.Channels;
+                            bitsPerSample = wavReader.WaveFormat.BitsPerSample;
+                            sampleRate = wavReader.WaveFormat.SampleRate;
+                            durationSec = wavReader.TotalTime.TotalSeconds;
+                            Log($"📊 WAV info: {channels}ch, {bitsPerSample}bit, {sampleRate}Hz, {durationSec:F1}s");
+                        }
+                        else if (ext.Equals(".flac", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var flacInfo = ReadFlacStreamInfo(audioPath);
+                            channels = flacInfo.Channels;
+                            bitsPerSample = flacInfo.BitsPerSample;
+                            sampleRate = flacInfo.SampleRate;
+                            durationSec = flacInfo.TotalSamples > 0 && flacInfo.SampleRate > 0
+                                ? (double)flacInfo.TotalSamples / flacInfo.SampleRate
+                                : 0;
+                            Log($"📊 FLAC info: {channels}ch, {bitsPerSample}bit, {sampleRate}Hz, {durationSec:F1}s");
+                        }
+
+                        _ = item.SubItems.Add(channels.ToString());
+                        _ = item.SubItems.Add(bitsPerSample.ToString());
+                        _ = item.SubItems.Add($"{sampleRate / 1000.0:0.0} kHz");
+                        _ = item.SubItems.Add($"{durationSec:F1}s");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"⚠️ Failed to read audio info for {audioPath}: {ex.Message}");
+                        _ = item.SubItems.Add("?");
+                        _ = item.SubItems.Add("?");
+                        _ = item.SubItems.Add("?");
+                        _ = item.SubItems.Add("?");
+                    }
+                    _ = item.SubItems.Add(Path.GetDirectoryName(audioPath) ?? string.Empty);
+                    _ = listViewAudioFiles.Items.Add(item);
+                    Log($"✅ Added audio file: {Path.GetFileName(audioPath)}");
+                }
+
+                if (_settings.AudioListView.ColumnWidths.Count == listViewAudioFiles.Columns.Count)
+                {
+                    for (int i = 0; i < listViewAudioFiles.Columns.Count; i++)
+                    {
+                        listViewAudioFiles.Columns[i].Width = _settings.AudioListView.ColumnWidths[i];
+                    }
+                    Log($"✅ Restored {_settings.AudioListView.ColumnWidths.Count} audio column widths");
+                }
+                else
+                {
+                    Log($"⚠️ Audio column count mismatch: saved {_settings.AudioListView.ColumnWidths.Count}, actual {listViewAudioFiles.Columns.Count}");
+                }
+
+                textBoxUserPreset1.Text = _settings.UserPresets.UserPreset1CommandLineArgs ?? "";
+                radioButtonUserPreset1.Checked = _settings.UserPresets.UserPreset1;
+
+                textBoxUserPreset2.Text = _settings.UserPresets.UserPreset2CommandLineArgs ?? "";
+                radioButtonUserPreset2.Checked = _settings.UserPresets.UserPreset2;
+
+                textBoxUserPreset3.Text = _settings.UserPresets.UserPreset3CommandLineArgs ?? "";
+                radioButtonUserPreset3.Checked = _settings.UserPresets.UserPreset3;
+
+                textBoxUserPreset4.Text = _settings.UserPresets.UserPreset4CommandLineArgs ?? "";
+                radioButtonUserPreset4.Checked = _settings.UserPresets.UserPreset4;
+
+                textBoxUserPreset5.Text = _settings.UserPresets.UserPreset5CommandLineArgs ?? "";
+                radioButtonUserPreset5.Checked = _settings.UserPresets.UserPreset5;
+
+                textBoxUserPreset6.Text = _settings.UserPresets.UserPreset6CommandLineArgs ?? "";
+                radioButtonUserPreset6.Checked = _settings.UserPresets.UserPreset6;
+
+                Log($"📊 Restored user presets: 1={_settings.UserPresets.UserPreset1}, 2={_settings.UserPresets.UserPreset2}, 3={_settings.UserPresets.UserPreset3}, 4={_settings.UserPresets.UserPreset4}, 5={_settings.UserPresets.UserPreset5}, 6={_settings.UserPresets.UserPreset6}");
+
+                radioButton_Hidden_Mode_OFF_MP3.Checked = _settings.HiddenModeMP3Off;
+                radioButton_Hidden_UserPreset_OFF.Checked = _settings.HiddenUserPresetOff;
+
+                Log($"📊 Restored hidden radio states: ModeMP3Off={_settings.HiddenModeMP3Off}, UserPresetOff={_settings.HiddenUserPresetOff}");
+
+                if (!string.IsNullOrEmpty(_settings.SelectedEncoderPath))
+                {
+                    Log($"🔍 Looking for selected encoder: {_settings.SelectedEncoderPath}");
+                    foreach (ListViewItem item in listViewEncoders.Items)
+                    {
+                        if (item.Tag?.ToString() == _settings.SelectedEncoderPath)
+                        {
+                            item.Checked = true;
+                            ListViewEncoders_ItemChecked(this, new ItemCheckedEventArgs(item));
+                            Log($"✅ Selected encoder found and checked");
+                            break;
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(_settings.SelectedAudioFilePath))
+                {
+                    Log($"🔍 Looking for selected audio file: {_settings.SelectedAudioFilePath}");
+                    foreach (ListViewItem item in listViewAudioFiles.Items)
+                    {
+                        if (item.Tag?.ToString() == _settings.SelectedAudioFilePath)
+                        {
+                            item.Checked = true;
+                            ListViewAudioFiles_ItemChecked(this, new ItemCheckedEventArgs(item));
+                            Log($"✅ Selected audio file found and checked");
+                            break;
+                        }
+                    }
+                }
+
+                _loopPlayback = _settings.LoopPlayback;
+                buttonLoopPlayback.Text = _loopPlayback ? "Loop: ON" : "Loop: OFF";
+                Log($"🔁 Loop playback: {_loopPlayback}");
+
+                _currentPlayMode = _settings.CurrentPlayMode;
+                radioButtonPlayOriginal.Checked = _currentPlayMode == PlayMode.Original;
+                radioButtonPlayEncoded.Checked = _currentPlayMode == PlayMode.Encoded;
+                radioButtonPlayMix.Checked = _currentPlayMode == PlayMode.Mix;
+                radioButtonPlayDifference.Checked = _currentPlayMode == PlayMode.Difference;
+                Log($"🎵 Current play mode: {_currentPlayMode}");
+
+                trackBarMixBalance.Value = Math.Clamp(_settings.EncoderSettings.MixBalanceValue, 0, 100);
+                bool showBalance = _currentPlayMode == PlayMode.Mix;
+                labelMixBalance.Visible = showBalance;
+                trackBarMixBalance.Visible = showBalance;
+                if (showBalance)
+                {
+                    int origPct = (int)((1f - trackBarMixBalance.Value / 100f) * 100);
+                    int encPct = (int)((trackBarMixBalance.Value / 100f) * 100);
+                    labelMixBalance.Text = $"{origPct} / {encPct}";
+                }
+
+                radioButtonModeCBR_MP3.Checked = _settings.EncoderSettings.ModeCBR_MP3;
+                radioButtonModeABR_MP3.Checked = _settings.EncoderSettings.ModeABR_MP3;
+                radioButtonModeVBR_MP3.Checked = _settings.EncoderSettings.ModeVBR_MP3;
+
+                trackBarCBR_MP3.Value = _settings.EncoderSettings.CBRValue_MP3;
+                trackBarABR_MP3.Value = _settings.EncoderSettings.ABRValue_MP3;
+                trackBarVBR_MP3.Value = _settings.EncoderSettings.VBRValue_MP3;
+                trackBarParameter_q_MP3.Value = _settings.EncoderSettings.QualityValue_MP3;
+
+                checkBoxParameter_q_MP3.Checked = _settings.EncoderSettings.UseQuality_MP3;
+                checkBoxChannelsModes_MP3.Checked = _settings.EncoderSettings.UseChannelModes_MP3;
+
+                radioButtonJointStereo_MP3.Checked = _settings.EncoderSettings.ChannelJointStereo_MP3;
+                radioButtonStereo_MP3.Checked = _settings.EncoderSettings.ChannelStereo_MP3;
+                radioButtonMono_MP3.Checked = _settings.EncoderSettings.ChannelMono_MP3;
+
+                labelCBRValue_MP3.Text = _settings.EncoderSettings.LabelCBR_MP3;
+                labelABRValue_MP3.Text = _settings.EncoderSettings.LabelABR_MP3;
+                labelVBRValue_MP3.Text = _settings.EncoderSettings.LabelVBR_MP3;
+                labelParameter_qValue_MP3.Text = _settings.EncoderSettings.LabelQuality_MP3;
+
+                MinimumSize = new Size(874, 515);
+
+                if (_settings.Window.Maximized)
+                {
+                    Log($"📊 Setting window to maximized");
+                    WindowState = FormWindowState.Maximized;
+                }
+                else
+                {
+                    int width = Math.Max(_settings.Window.Width, MinimumSize.Width);
+                    int height = Math.Max(_settings.Window.Height, MinimumSize.Height);
+                    var screen = Screen.FromPoint(new Point(_settings.Window.X, _settings.Window.Y));
+                    if (!screen.Bounds.Contains(_settings.Window.X, _settings.Window.Y))
+                    {
+                        Width = width;
+                        Height = height;
+                        CenterToScreen();
+                        Log($"📊 Window centered on screen: ({Location.X}, {Location.Y}) size: {Width}x{Height}");
+                    }
+                    else
+                    {
+                        Width = width;
+                        Height = height;
+                        Location = new Point(_settings.Window.X, _settings.Window.Y);
+                        Log($"📊 Window position: ({Location.X}, {Location.Y}) size: {Width}x{Height}");
+                    }
+                }
+
+                checkBoxCheckForUpdates.Checked = _settings.CheckForUpdates;
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ Failed to load settings: {ex.Message}");
+                Log($"❌ StackTrace: {ex.StackTrace}");
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+                Log($"✅ Settings loading completed");
+            }
+        }
         private void EnsureTempFolderExists()
         {
             Log($"🔍 Checking temp folder: {_tempFolder}");
@@ -755,389 +1139,6 @@ namespace Codec_Playground_H
             double ms = (wavBytes / (double)bytesPerSecond) * 1000;
             Log($"📊 ConvertWavBytesToMilliseconds: {wavBytes} bytes = {ms:F2} ms");
             return ms;
-        }
-
-        private void SaveSettings()
-        {
-            Log($"💾 Saving settings to {_settingsFilePath}");
-            try
-            {
-                Log($"📊 Saving {listViewEncoders.Items.Count} encoders");
-                _settings.EncoderPaths = [.. listViewEncoders.Items
-            .Cast<ListViewItem>()
-            .Select(item => item.Tag?.ToString() ?? string.Empty)
-            .Where(path => !string.IsNullOrEmpty(path))];
-
-                Log($"📊 Saving {listViewAudioFiles.Items.Count} audio files");
-                _settings.AudioFilePaths = [.. listViewAudioFiles.Items
-            .Cast<ListViewItem>()
-            .Select(item => item.Tag?.ToString() ?? string.Empty)
-            .Where(path => !string.IsNullOrEmpty(path))];
-
-                _settings.SelectedEncoderPath = _selectedEncoderPath;
-                _settings.SelectedAudioFilePath = _originalFilePath;
-                _settings.LoopPlayback = _loopPlayback;
-                _settings.CurrentPlayMode = _currentPlayMode;
-                _settings.EncoderSettings.MixBalanceValue = trackBarMixBalance.Value;
-                _settings.CheckForUpdates = checkBoxCheckForUpdates.Checked;
-
-                _settings.EncoderSettings.ModeCBR_MP3 = radioButtonModeCBR_MP3.Checked;
-                _settings.EncoderSettings.ModeABR_MP3 = radioButtonModeABR_MP3.Checked;
-                _settings.EncoderSettings.ModeVBR_MP3 = radioButtonModeVBR_MP3.Checked;
-
-                _settings.EncoderSettings.CBRValue_MP3 = trackBarCBR_MP3.Value;
-                _settings.EncoderSettings.ABRValue_MP3 = trackBarABR_MP3.Value;
-                _settings.EncoderSettings.VBRValue_MP3 = trackBarVBR_MP3.Value;
-                _settings.EncoderSettings.QualityValue_MP3 = trackBarParameter_q_MP3.Value;
-
-                _settings.EncoderSettings.UseQuality_MP3 = checkBoxParameter_q_MP3.Checked;
-                _settings.EncoderSettings.UseChannelModes_MP3 = checkBoxChannelsModes_MP3.Checked;
-
-                _settings.EncoderSettings.ChannelJointStereo_MP3 = radioButtonJointStereo_MP3.Checked;
-                _settings.EncoderSettings.ChannelStereo_MP3 = radioButtonStereo_MP3.Checked;
-                _settings.EncoderSettings.ChannelMono_MP3 = radioButtonMono_MP3.Checked;
-
-                _settings.EncoderSettings.LabelCBR_MP3 = labelCBRValue_MP3.Text;
-                _settings.EncoderSettings.LabelABR_MP3 = labelABRValue_MP3.Text;
-                _settings.EncoderSettings.LabelVBR_MP3 = labelVBRValue_MP3.Text;
-                _settings.EncoderSettings.LabelQuality_MP3 = labelParameter_qValue_MP3.Text;
-
-                _settings.UserPresets.UserPreset1 = radioButtonUserPreset1.Checked;
-                _settings.UserPresets.UserPreset1Name = radioButtonUserPreset1.Text;
-                _settings.UserPresets.UserPreset1CommandLineArgs = textBoxUserPreset1.Text;
-
-                _settings.UserPresets.UserPreset2 = radioButtonUserPreset2.Checked;
-                _settings.UserPresets.UserPreset2Name = radioButtonUserPreset2.Text;
-                _settings.UserPresets.UserPreset2CommandLineArgs = textBoxUserPreset2.Text;
-
-                _settings.UserPresets.UserPreset3 = radioButtonUserPreset3.Checked;
-                _settings.UserPresets.UserPreset3Name = radioButtonUserPreset3.Text;
-                _settings.UserPresets.UserPreset3CommandLineArgs = textBoxUserPreset3.Text;
-
-                _settings.UserPresets.UserPreset4 = radioButtonUserPreset4.Checked;
-                _settings.UserPresets.UserPreset4Name = radioButtonUserPreset4.Text;
-                _settings.UserPresets.UserPreset4CommandLineArgs = textBoxUserPreset4.Text;
-
-                _settings.UserPresets.UserPreset5 = radioButtonUserPreset5.Checked;
-                _settings.UserPresets.UserPreset5Name = radioButtonUserPreset5.Text;
-                _settings.UserPresets.UserPreset5CommandLineArgs = textBoxUserPreset5.Text;
-
-                _settings.UserPresets.UserPreset6 = radioButtonUserPreset6.Checked;
-                _settings.UserPresets.UserPreset6Name = radioButtonUserPreset6.Text;
-                _settings.UserPresets.UserPreset6CommandLineArgs = textBoxUserPreset6.Text;
-
-                Log($"📊 Saved user presets: 1={_settings.UserPresets.UserPreset1}, 2={_settings.UserPresets.UserPreset2}, 3={_settings.UserPresets.UserPreset3}, 4={_settings.UserPresets.UserPreset4}, 5={_settings.UserPresets.UserPreset5}, 6={_settings.UserPresets.UserPreset6}");
-
-                _settings.HiddenModeMP3Off = radioButton_Hidden_Mode_OFF_MP3.Checked;
-                _settings.HiddenUserPresetOff = radioButton_Hidden_UserPreset_OFF.Checked;
-
-                Log($"📊 Saved hidden radio states: ModeMP3Off={_settings.HiddenModeMP3Off}, UserPresetOff={_settings.HiddenUserPresetOff}");
-
-                _settings.EncoderListView.ColumnWidths = [];
-                foreach (ColumnHeader col in listViewEncoders.Columns)
-                {
-                    _settings.EncoderListView.ColumnWidths.Add(col.Width);
-                }
-                Log($"📊 Saved {_settings.EncoderListView.ColumnWidths.Count} encoder column widths");
-
-                _settings.AudioListView.ColumnWidths = [];
-                foreach (ColumnHeader col in listViewAudioFiles.Columns)
-                {
-                    _settings.AudioListView.ColumnWidths.Add(col.Width);
-                }
-                Log($"📊 Saved {_settings.AudioListView.ColumnWidths.Count} audio column widths");
-
-                if (WindowState != FormWindowState.Maximized)
-                {
-                    _settings.Window.Width = Width;
-                    _settings.Window.Height = Height;
-                    _settings.Window.X = Location.X;
-                    _settings.Window.Y = Location.Y;
-                    Log($"📊 Window position: ({Location.X}, {Location.Y}) size: {Width}x{Height}");
-                }
-                else
-                {
-                    var bounds = RestoreBounds;
-                    _settings.Window.Width = bounds.Width;
-                    _settings.Window.Height = bounds.Height;
-                    _settings.Window.X = bounds.X;
-                    _settings.Window.Y = bounds.Y;
-                    Log($"📊 Window maximized, restoring to: ({bounds.X}, {bounds.Y}) size: {bounds.Width}x{bounds.Height}");
-                }
-                _settings.Window.Maximized = WindowState == FormWindowState.Maximized;
-                Log($"📊 Window maximized: {_settings.Window.Maximized}");
-
-                JsonSerializerOptions options = new()
-                {
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-                string json = JsonSerializer.Serialize(_settings, options);
-                File.WriteAllText(_settingsFilePath, json);
-                Log($"✅ Settings saved successfully ({json.Length} bytes)");
-            }
-            catch (Exception ex)
-            {
-                Log($"❌ Failed to save settings: {ex.Message}");
-                Log($"❌ StackTrace: {ex.StackTrace}");
-            }
-        }
-        private void LoadSettings()
-        {
-            Log($"📂 Loading settings from {_settingsFilePath}");
-            try
-            {
-                if (!File.Exists(_settingsFilePath))
-                {
-                    Log($"ℹ️ Settings file not found, using defaults");
-                    MinimumSize = new Size(874, 515);
-                    return;
-                }
-
-                _isLoadingSettings = true;
-                string json = File.ReadAllText(_settingsFilePath);
-                Log($"📄 Settings file size: {json.Length} bytes");
-                JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
-                _settings = JsonSerializer.Deserialize<AppSettings>(json, options) ?? new AppSettings();
-                Log($"✅ Settings deserialized successfully");
-
-                Log($"📊 Loading {_settings.EncoderPaths.Count} encoders");
-                listViewEncoders.Items.Clear();
-                foreach (string encoderPath in _settings.EncoderPaths)
-                {
-                    if (!File.Exists(encoderPath))
-                    {
-                        Log($"⚠️ Encoder file not found: {encoderPath}");
-                        continue;
-                    }
-                    (string? name, string? version) = GetEncoderInfo(encoderPath);
-                    ListViewItem item = new(name) { Tag = encoderPath, Checked = false };
-                    _ = item.SubItems.Add(version);
-                    _ = item.SubItems.Add(Path.GetDirectoryName(encoderPath) ?? string.Empty);
-                    _ = listViewEncoders.Items.Add(item);
-                    Log($"✅ Added encoder: {name} version {version}");
-                }
-
-                if (_settings.EncoderListView.ColumnWidths.Count == listViewEncoders.Columns.Count)
-                {
-                    for (int i = 0; i < listViewEncoders.Columns.Count; i++)
-                    {
-                        listViewEncoders.Columns[i].Width = _settings.EncoderListView.ColumnWidths[i];
-                    }
-                    Log($"✅ Restored {_settings.EncoderListView.ColumnWidths.Count} encoder column widths");
-                }
-                else
-                {
-                    Log($"⚠️ Encoder column count mismatch: saved {_settings.EncoderListView.ColumnWidths.Count}, actual {listViewEncoders.Columns.Count}");
-                }
-
-                Log($"📊 Loading {_settings.AudioFilePaths.Count} audio files");
-                listViewAudioFiles.Items.Clear();
-                foreach (string audioPath in _settings.AudioFilePaths)
-                {
-                    if (!File.Exists(audioPath))
-                    {
-                        Log($"⚠️ Audio file not found: {audioPath}");
-                        continue;
-                    }
-                    ListViewItem item = new(Path.GetFileName(audioPath)) { Tag = audioPath, Checked = false };
-
-                    try
-                    {
-                        int channels = 0, bitsPerSample = 0, sampleRate = 0;
-                        double durationSec = 0;
-                        string ext = Path.GetExtension(audioPath);
-
-                        if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
-                        {
-                            using var wavReader = new WaveFileReader(audioPath);
-                            channels = wavReader.WaveFormat.Channels;
-                            bitsPerSample = wavReader.WaveFormat.BitsPerSample;
-                            sampleRate = wavReader.WaveFormat.SampleRate;
-                            durationSec = wavReader.TotalTime.TotalSeconds;
-                            Log($"📊 WAV info: {channels}ch, {bitsPerSample}bit, {sampleRate}Hz, {durationSec:F1}s");
-                        }
-                        else if (ext.Equals(".flac", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var flacInfo = ReadFlacStreamInfo(audioPath);
-                            channels = flacInfo.Channels;
-                            bitsPerSample = flacInfo.BitsPerSample;
-                            sampleRate = flacInfo.SampleRate;
-                            durationSec = flacInfo.TotalSamples > 0 && flacInfo.SampleRate > 0
-                                ? (double)flacInfo.TotalSamples / flacInfo.SampleRate
-                                : 0;
-                            Log($"📊 FLAC info: {channels}ch, {bitsPerSample}bit, {sampleRate}Hz, {durationSec:F1}s");
-                        }
-
-                        _ = item.SubItems.Add(channels.ToString());
-                        _ = item.SubItems.Add(bitsPerSample.ToString());
-                        _ = item.SubItems.Add($"{sampleRate / 1000.0:0.0} kHz");
-                        _ = item.SubItems.Add($"{durationSec:F1}s");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log($"⚠️ Failed to read audio info for {audioPath}: {ex.Message}");
-                        _ = item.SubItems.Add("?");
-                        _ = item.SubItems.Add("?");
-                        _ = item.SubItems.Add("?");
-                        _ = item.SubItems.Add("?");
-                    }
-                    _ = item.SubItems.Add(Path.GetDirectoryName(audioPath) ?? string.Empty);
-                    _ = listViewAudioFiles.Items.Add(item);
-                    Log($"✅ Added audio file: {Path.GetFileName(audioPath)}");
-                }
-
-                if (_settings.AudioListView.ColumnWidths.Count == listViewAudioFiles.Columns.Count)
-                {
-                    for (int i = 0; i < listViewAudioFiles.Columns.Count; i++)
-                    {
-                        listViewAudioFiles.Columns[i].Width = _settings.AudioListView.ColumnWidths[i];
-                    }
-                    Log($"✅ Restored {_settings.AudioListView.ColumnWidths.Count} audio column widths");
-                }
-                else
-                {
-                    Log($"⚠️ Audio column count mismatch: saved {_settings.AudioListView.ColumnWidths.Count}, actual {listViewAudioFiles.Columns.Count}");
-                }
-
-                textBoxUserPreset1.Text = _settings.UserPresets.UserPreset1CommandLineArgs ?? "";
-                radioButtonUserPreset1.Checked = _settings.UserPresets.UserPreset1;
-
-                textBoxUserPreset2.Text = _settings.UserPresets.UserPreset2CommandLineArgs ?? "";
-                radioButtonUserPreset2.Checked = _settings.UserPresets.UserPreset2;
-
-                textBoxUserPreset3.Text = _settings.UserPresets.UserPreset3CommandLineArgs ?? "";
-                radioButtonUserPreset3.Checked = _settings.UserPresets.UserPreset3;
-
-                textBoxUserPreset4.Text = _settings.UserPresets.UserPreset4CommandLineArgs ?? "";
-                radioButtonUserPreset4.Checked = _settings.UserPresets.UserPreset4;
-
-                textBoxUserPreset5.Text = _settings.UserPresets.UserPreset5CommandLineArgs ?? "";
-                radioButtonUserPreset5.Checked = _settings.UserPresets.UserPreset5;
-
-                textBoxUserPreset6.Text = _settings.UserPresets.UserPreset6CommandLineArgs ?? "";
-                radioButtonUserPreset6.Checked = _settings.UserPresets.UserPreset6;
-
-                Log($"📊 Restored user presets: 1={_settings.UserPresets.UserPreset1}, 2={_settings.UserPresets.UserPreset2}, 3={_settings.UserPresets.UserPreset3}, 4={_settings.UserPresets.UserPreset4}, 5={_settings.UserPresets.UserPreset5}, 6={_settings.UserPresets.UserPreset6}");
-
-                radioButton_Hidden_Mode_OFF_MP3.Checked = _settings.HiddenModeMP3Off;
-                radioButton_Hidden_UserPreset_OFF.Checked = _settings.HiddenUserPresetOff;
-
-                Log($"📊 Restored hidden radio states: ModeMP3Off={_settings.HiddenModeMP3Off}, UserPresetOff={_settings.HiddenUserPresetOff}");
-
-                if (!string.IsNullOrEmpty(_settings.SelectedEncoderPath))
-                {
-                    Log($"🔍 Looking for selected encoder: {_settings.SelectedEncoderPath}");
-                    foreach (ListViewItem item in listViewEncoders.Items)
-                    {
-                        if (item.Tag?.ToString() == _settings.SelectedEncoderPath)
-                        {
-                            item.Checked = true;
-                            ListViewEncoders_ItemChecked(this, new ItemCheckedEventArgs(item));
-                            Log($"✅ Selected encoder found and checked");
-                            break;
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(_settings.SelectedAudioFilePath))
-                {
-                    Log($"🔍 Looking for selected audio file: {_settings.SelectedAudioFilePath}");
-                    foreach (ListViewItem item in listViewAudioFiles.Items)
-                    {
-                        if (item.Tag?.ToString() == _settings.SelectedAudioFilePath)
-                        {
-                            item.Checked = true;
-                            ListViewAudioFiles_ItemChecked(this, new ItemCheckedEventArgs(item));
-                            Log($"✅ Selected audio file found and checked");
-                            break;
-                        }
-                    }
-                }
-
-                _loopPlayback = _settings.LoopPlayback;
-                buttonLoopPlayback.Text = _loopPlayback ? "Loop: ON" : "Loop: OFF";
-                Log($"🔁 Loop playback: {_loopPlayback}");
-
-                _currentPlayMode = _settings.CurrentPlayMode;
-                radioButtonPlayOriginal.Checked = _currentPlayMode == PlayMode.Original;
-                radioButtonPlayEncoded.Checked = _currentPlayMode == PlayMode.Encoded;
-                radioButtonPlayMix.Checked = _currentPlayMode == PlayMode.Mix;
-                radioButtonPlayDifference.Checked = _currentPlayMode == PlayMode.Difference;
-                Log($"🎵 Current play mode: {_currentPlayMode}");
-
-                trackBarMixBalance.Value = Math.Clamp(_settings.EncoderSettings.MixBalanceValue, 0, 100);
-                bool showBalance = _currentPlayMode == PlayMode.Mix;
-                labelMixBalance.Visible = showBalance;
-                trackBarMixBalance.Visible = showBalance;
-                if (showBalance)
-                {
-                    int origPct = (int)((1f - trackBarMixBalance.Value / 100f) * 100);
-                    int encPct = (int)((trackBarMixBalance.Value / 100f) * 100);
-                    labelMixBalance.Text = $"{origPct} / {encPct}";
-                }
-
-                radioButtonModeCBR_MP3.Checked = _settings.EncoderSettings.ModeCBR_MP3;
-                radioButtonModeABR_MP3.Checked = _settings.EncoderSettings.ModeABR_MP3;
-                radioButtonModeVBR_MP3.Checked = _settings.EncoderSettings.ModeVBR_MP3;
-
-                trackBarCBR_MP3.Value = _settings.EncoderSettings.CBRValue_MP3;
-                trackBarABR_MP3.Value = _settings.EncoderSettings.ABRValue_MP3;
-                trackBarVBR_MP3.Value = _settings.EncoderSettings.VBRValue_MP3;
-                trackBarParameter_q_MP3.Value = _settings.EncoderSettings.QualityValue_MP3;
-
-                checkBoxParameter_q_MP3.Checked = _settings.EncoderSettings.UseQuality_MP3;
-                checkBoxChannelsModes_MP3.Checked = _settings.EncoderSettings.UseChannelModes_MP3;
-
-                radioButtonJointStereo_MP3.Checked = _settings.EncoderSettings.ChannelJointStereo_MP3;
-                radioButtonStereo_MP3.Checked = _settings.EncoderSettings.ChannelStereo_MP3;
-                radioButtonMono_MP3.Checked = _settings.EncoderSettings.ChannelMono_MP3;
-
-                labelCBRValue_MP3.Text = _settings.EncoderSettings.LabelCBR_MP3;
-                labelABRValue_MP3.Text = _settings.EncoderSettings.LabelABR_MP3;
-                labelVBRValue_MP3.Text = _settings.EncoderSettings.LabelVBR_MP3;
-                labelParameter_qValue_MP3.Text = _settings.EncoderSettings.LabelQuality_MP3;
-
-                MinimumSize = new Size(874, 515);
-
-                if (_settings.Window.Maximized)
-                {
-                    Log($"📊 Setting window to maximized");
-                    WindowState = FormWindowState.Maximized;
-                }
-                else
-                {
-                    int width = Math.Max(_settings.Window.Width, MinimumSize.Width);
-                    int height = Math.Max(_settings.Window.Height, MinimumSize.Height);
-                    var screen = Screen.FromPoint(new Point(_settings.Window.X, _settings.Window.Y));
-                    if (!screen.Bounds.Contains(_settings.Window.X, _settings.Window.Y))
-                    {
-                        Width = width;
-                        Height = height;
-                        CenterToScreen();
-                        Log($"📊 Window centered on screen: ({Location.X}, {Location.Y}) size: {Width}x{Height}");
-                    }
-                    else
-                    {
-                        Width = width;
-                        Height = height;
-                        Location = new Point(_settings.Window.X, _settings.Window.Y);
-                        Log($"📊 Window position: ({Location.X}, {Location.Y}) size: {Width}x{Height}");
-                    }
-                }
-
-                checkBoxCheckForUpdates.Checked = _settings.CheckForUpdates;
-            }
-            catch (Exception ex)
-            {
-                Log($"❌ Failed to load settings: {ex.Message}");
-                Log($"❌ StackTrace: {ex.StackTrace}");
-            }
-            finally
-            {
-                _isLoadingSettings = false;
-                Log($"✅ Settings loading completed");
-            }
         }
 
         // Encoders
@@ -1740,7 +1741,7 @@ namespace Codec_Playground_H
                 return;
             }
 
-            string cacheKey = GetFullCacheKey(originalFilePath, _selectedEncoderPath);
+            string cacheKey = GenerateCacheFileNameAndCacheKey(originalFilePath, _selectedEncoderPath);
             _currentCacheKey = cacheKey;
             Log($"🔑 Cache key: {cacheKey}");
 
@@ -2259,7 +2260,14 @@ namespace Codec_Playground_H
         private void UpdateEncodingUI()
         {
             if (InvokeRequired) { Invoke(UpdateEncodingUI); return; }
-            Log($"🔄 UpdateEncodingUI: status={_encodingStatus}, seamless={_isSeamlessReencode}");
+
+            if (_encodingStatus != _lastLoggedStatus || _isSeamlessReencode != _lastSeamlessState)
+            {
+                Log($"🔄 UpdateEncodingUI: status={_encodingStatus}, seamless={_isSeamlessReencode}");
+                _lastLoggedStatus = _encodingStatus;
+                _lastSeamlessState = _isSeamlessReencode;
+            }
+
             switch (_encodingStatus)
             {
                 case EncodingStatus.Idle:
@@ -2344,7 +2352,7 @@ namespace Codec_Playground_H
                 return;
             }
 
-            string cacheKey = GetFullCacheKey(_originalFilePath, _selectedEncoderPath);
+            string cacheKey = GenerateCacheFileNameAndCacheKey(_originalFilePath, _selectedEncoderPath);
             _currentCacheKey = cacheKey;
             Log($"🔁 Seamless swap target key: {cacheKey}");
 
@@ -2786,8 +2794,10 @@ namespace Codec_Playground_H
                     var encSource = new MemorySampleSource(encData, floatFormat);
                     Log($"✅ Encoded loaded to memory: {encData.Length} samples");
 
-                    _playgroundMixer = new CodecPlaygroundMixer(_originalMemorySource, encSource, originalFormat, delaySamples);
-                    _playgroundMixer.CurrentMode = _currentPlayMode;
+                    _playgroundMixer = new CodecPlaygroundMixer(_originalMemorySource, encSource, originalFormat, delaySamples)
+                    {
+                        CurrentMode = _currentPlayMode
+                    };
 
                     float savedBalance = trackBarMixBalance.Value / 100f;
                     _playgroundMixer.SetMixBalance(savedBalance);
@@ -3105,7 +3115,7 @@ namespace Codec_Playground_H
             {
                 Log($"🔁 Loop: restarting from beginning");
                 SeekPlaybackToBytes(0);
-                if (_waveOut != null) _waveOut.Play();
+                _waveOut?.Play();
             }
             else
             {
@@ -3406,7 +3416,7 @@ namespace Codec_Playground_H
 
             bool hasEncodedFile = !string.IsNullOrEmpty(_encodedFilePath);
             bool needEncode = _needsReencoding || !hasEncodedFile || !File.Exists(_encodedFilePath);
-            Log($"📊 Need encode: {needEncode}, needsReencoding={_needsReencoding}, hasEncoded={hasEncodedFile}, fileExists={(hasEncodedFile ? File.Exists(_encodedFilePath) : false)}");
+            Log($"📊 Need encode: {needEncode}, needsReencoding={_needsReencoding}, hasEncoded={hasEncodedFile}, fileExists={hasEncodedFile || File.Exists(_encodedFilePath)}");
 
             if (needEncode)
             {
@@ -3639,7 +3649,8 @@ namespace Codec_Playground_H
             }
         }
 
-        private string GetFullCacheKey(string audioPath, string encoderPath)
+        // Cache
+        private string GenerateCacheFileNameAndCacheKey(string audioPath, string encoderPath)
         {
             Log($"🔑 Generating cache key for {Path.GetFileName(audioPath)}");
 
@@ -3670,7 +3681,7 @@ namespace Codec_Playground_H
                 string encoderVersion = "unknown";
                 try
                 {
-                    var info = GetEncoderInfo(encoderPath);
+                    (string Name, string Version) info = GetEncoderInfo(encoderPath);
                     if (!string.IsNullOrEmpty(info.Version) && info.Version != "Unknown")
                     {
                         encoderVersion = info.Version;
@@ -3679,7 +3690,7 @@ namespace Codec_Playground_H
                             encoderVersion = encoderVersion.Replace(c, '_');
                         }
                         encoderVersion = encoderVersion.Replace(' ', '_').Replace('.', '_');
-                        if (encoderVersion.Length > 70) encoderVersion = encoderVersion.Substring(0, 70);
+                        if (encoderVersion.Length > 70) encoderVersion = encoderVersion[..70];
                     }
                 }
                 catch { }
@@ -3692,23 +3703,21 @@ namespace Codec_Playground_H
                     cleanPresetArgs = cleanPresetArgs.Replace(c, '_');
                 }
                 cleanPresetArgs = cleanPresetArgs.Replace(' ', '_').Replace('"', '_');
-                if (cleanPresetArgs.Length > 50) cleanPresetArgs = cleanPresetArgs.Substring(0, 50);
+                if (cleanPresetArgs.Length > 50) cleanPresetArgs = cleanPresetArgs[..50];
 
                 if (string.IsNullOrEmpty(cleanPresetArgs)) cleanPresetArgs = "empty";
 
                 string readableName = $"{fileNameWithExt}_{encoderFullName}_PRESET_{cleanPresetArgs}";
-                if (readableName.Length > 130) readableName = readableName.Substring(0, 130);
+                if (readableName.Length > 130) readableName = readableName[..130];
 
                 StringBuilder settings = new();
                 _ = settings.Append($"{audioPath}|{encoderPath}|{encoderVersion}|PRESET|{presetArgs}");
 
-                using SHA256 sha = SHA256.Create();
                 byte[] bytes = Encoding.UTF8.GetBytes(settings.ToString());
-                byte[] hash = sha.ComputeHash(bytes);
+                byte[] hash = SHA256.HashData(bytes);
                 string hashString = Convert.ToBase64String(hash)
                     .Replace("/", "_")
-                    .Replace("+", "-")
-                    .Substring(0, 4);
+                    .Replace("+", "-")[..4];
 
                 string result = $"{readableName}____{hashString}";
                 Log($"🔑 Generated cache key from preset: {result}");
@@ -3728,7 +3737,7 @@ namespace Codec_Playground_H
             string encoderVersion2 = "unknown";
             try
             {
-                var info = GetEncoderInfo(encoderPath);
+                (string Name, string Version) info = GetEncoderInfo(encoderPath);
                 if (!string.IsNullOrEmpty(info.Version) && info.Version != "Unknown")
                 {
                     encoderVersion2 = info.Version;
@@ -3737,7 +3746,7 @@ namespace Codec_Playground_H
                         encoderVersion2 = encoderVersion2.Replace(c, '_');
                     }
                     encoderVersion2 = encoderVersion2.Replace(' ', '_').Replace('.', '_');
-                    if (encoderVersion2.Length > 70) encoderVersion2 = encoderVersion2.Substring(0, 70);
+                    if (encoderVersion2.Length > 70) encoderVersion2 = encoderVersion2[..70];
                 }
             }
             catch { }
@@ -3799,21 +3808,17 @@ namespace Codec_Playground_H
                 else if (radioButtonStereo_MP3.Checked) _ = settings2.Append("s|");
                 else if (radioButtonMono_MP3.Checked) _ = settings2.Append("m|");
             }
-            else _ = settings2.Append("auto|");
-
-            using SHA256 sha2 = SHA256.Create();
+            
             byte[] bytes2 = Encoding.UTF8.GetBytes(settings2.ToString());
-            byte[] hash2 = sha2.ComputeHash(bytes2);
+            byte[] hash2 = SHA256.HashData(bytes2);
             string hashString2 = Convert.ToBase64String(hash2)
                 .Replace("/", "_")
-                .Replace("+", "-")
-                .Substring(0, 4);
+                .Replace("+", "-")[..4];
 
             string result2 = $"{readableName2}____{hashString2}";
             Log($"🔑 Generated cache key: {result2}");
             return result2;
         }
-
         private void AddToCache(string key, string filePath, int delay)
         {
             Log($"💾 AddToCache: key={key}, file={Path.GetFileName(filePath)}, delay={delay}");
@@ -3825,7 +3830,6 @@ namespace Codec_Playground_H
                 Log($"📊 Cache size: {_encodedCache.Count} entries");
             }
         }
-
         private bool TryGetFromCache(string key, out string? filePath, out int delay)
         {
             Log($"🔍 TryGetFromCache: key={key}");
@@ -3847,7 +3851,6 @@ namespace Codec_Playground_H
                 return false;
             }
         }
-
         private void ClearCache()
         {
             Log($"🗑️ ClearCache called");
@@ -4130,8 +4133,10 @@ namespace Codec_Playground_H
             _notificationTimer?.Stop();
             _notificationTimer?.Dispose();
 
-            _notificationTimer = new System.Windows.Forms.Timer();
-            _notificationTimer.Interval = durationMs;
+            _notificationTimer = new System.Windows.Forms.Timer
+            {
+                Interval = durationMs
+            };
             _notificationTimer.Tick += (s, e) =>
             {
                 labelNoUpdates.Visible = false;
