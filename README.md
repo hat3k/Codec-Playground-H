@@ -101,7 +101,6 @@ This tool exists to help you *hear* the difference, not to prove anything with n
 - **CBR** (8-320 kbps) - constant bitrate
 - **ABR** (8-320 kbps) - average bitrate
 - **VBR** (V0-V9) - variable bitrate
-- **VBR v4.1** - modern VBR mode (LAME 4.1+)
 - **Quality (q0-q9)** - algorithm quality selection
 - **Channel Modes** - Joint Stereo / Stereo / Mono
 
