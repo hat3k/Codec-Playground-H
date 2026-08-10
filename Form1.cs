@@ -3339,26 +3339,68 @@ namespace Codec_Playground_H
         private void ButtonPlayPause_Click(object? sender, EventArgs e)
         {
             Log($"🎵 Play/Pause clicked, state={_currentPlayerState}");
+
             if (_currentPlayerState == PlayerState.Playing)
             {
                 PauseDual();
                 return;
             }
+
             if (_currentPlayerState == PlayerState.Paused)
             {
                 PlayDual();
                 return;
             }
 
-            if (string.IsNullOrEmpty(_originalFilePath))
+            if (string.IsNullOrEmpty(_originalFilePath) || listViewAudioFiles.Items.Count == 0)
             {
-                Log($"⚠️ No original file selected");
+                Log($"⚠️ No audio file selected or list is empty");
+                DialogResult dialogResult = MessageBox.Show(
+                    this,
+                    "Please add an audio file (WAV or FLAC) first!\n\n" +
+                    "Drag and drop files or folders onto the 'Audio Files' list.",
+                    "No Audio File",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
-            if (string.IsNullOrEmpty(_selectedEncoderPath))
+
+            if (string.IsNullOrEmpty(_selectedEncoderPath) || listViewEncoders.Items.Count == 0)
             {
-                Log($"⚠️ No encoder selected");
-                MessageBox.Show("Please select an encoder first!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Log($"⚠️ No encoder selected or list is empty");
+                MessageBox.Show(
+                    this,
+                    "Please add a LAME encoder (lame.exe) first!\n\n" +
+                    "Drag and drop lame.exe or a folder containing it onto the 'Encoders' list.",
+                    "No Encoder",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!File.Exists(_originalFilePath))
+            {
+                Log($"⚠️ Audio file not found: {_originalFilePath}");
+                MessageBox.Show(
+                    this,
+                    $"Audio file not found:\n{_originalFilePath}\n\n" +
+                    "Please add the file again.",
+                    "File Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!File.Exists(_selectedEncoderPath))
+            {
+                Log($"⚠️ Encoder not found: {_selectedEncoderPath}");
+                MessageBox.Show(
+                    this,
+                    $"Encoder not found:\n{_selectedEncoderPath}\n\n" +
+                    "Please add the encoder again.",
+                    "File Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
                 return;
             }
 
@@ -3377,7 +3419,6 @@ namespace Codec_Playground_H
                 PlayDual();
             }
         }
-
         private void ButtonStop_Click(object? sender, EventArgs e)
         {
             Log($"⏹️ Stop clicked");
