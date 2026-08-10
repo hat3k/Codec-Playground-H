@@ -158,6 +158,17 @@ namespace Codec_Playground_H
             Log("✅ Form1_Load completed");
         }
 
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        private static readonly JsonSerializerOptions _jsonOptionsCaseInsensitive = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         private void SaveSettings()
         {
             Log($"💾 Saving settings to {_settingsFilePath}");
@@ -268,12 +279,7 @@ namespace Codec_Playground_H
                 _settings.Window.Maximized = WindowState == FormWindowState.Maximized;
                 Log($"📊 Window maximized: {_settings.Window.Maximized}");
 
-                JsonSerializerOptions options = new()
-                {
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
-                string json = JsonSerializer.Serialize(_settings, options);
+                string json = JsonSerializer.Serialize(_settings, _jsonOptions);
                 File.WriteAllText(_settingsFilePath, json);
                 Log($"✅ Settings saved successfully ({json.Length} bytes)");
             }
@@ -283,6 +289,7 @@ namespace Codec_Playground_H
                 Log($"❌ StackTrace: {ex.StackTrace}");
             }
         }
+
         private void LoadSettings()
         {
             Log($"📂 Loading settings from {_settingsFilePath}");
@@ -298,8 +305,7 @@ namespace Codec_Playground_H
                 _isLoadingSettings = true;
                 string json = File.ReadAllText(_settingsFilePath);
                 Log($"📄 Settings file size: {json.Length} bytes");
-                JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
-                _settings = JsonSerializer.Deserialize<AppSettings>(json, options) ?? new AppSettings();
+                _settings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptionsCaseInsensitive) ?? new AppSettings();
                 Log($"✅ Settings deserialized successfully");
 
                 Log($"📊 Loading {_settings.EncoderPaths.Count} encoders");
