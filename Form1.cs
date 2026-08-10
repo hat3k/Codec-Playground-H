@@ -3355,7 +3355,7 @@ namespace Codec_Playground_H
             if (string.IsNullOrEmpty(_originalFilePath) || listViewAudioFiles.Items.Count == 0)
             {
                 Log($"⚠️ No audio file selected or list is empty");
-                DialogResult dialogResult = MessageBox.Show(
+                _ = MessageBox.Show(
                     this,
                     "Please add an audio file (WAV or FLAC) first!\n\n" +
                     "Drag and drop files or folders onto the 'Audio Files' list.",
@@ -3368,7 +3368,7 @@ namespace Codec_Playground_H
             if (string.IsNullOrEmpty(_selectedEncoderPath) || listViewEncoders.Items.Count == 0)
             {
                 Log($"⚠️ No encoder selected or list is empty");
-                MessageBox.Show(
+                _ = MessageBox.Show(
                     this,
                     "Please add a LAME encoder (lame.exe) first!\n\n" +
                     "Drag and drop lame.exe or a folder containing it onto the 'Encoders' list.",
@@ -3381,7 +3381,7 @@ namespace Codec_Playground_H
             if (!File.Exists(_originalFilePath))
             {
                 Log($"⚠️ Audio file not found: {_originalFilePath}");
-                MessageBox.Show(
+                _ = MessageBox.Show(
                     this,
                     $"Audio file not found:\n{_originalFilePath}\n\n" +
                     "Please add the file again.",
@@ -3394,7 +3394,7 @@ namespace Codec_Playground_H
             if (!File.Exists(_selectedEncoderPath))
             {
                 Log($"⚠️ Encoder not found: {_selectedEncoderPath}");
-                MessageBox.Show(
+                _ = MessageBox.Show(
                     this,
                     $"Encoder not found:\n{_selectedEncoderPath}\n\n" +
                     "Please add the encoder again.",
