@@ -45,24 +45,24 @@
             columnHeaderAudioFilesDuration = new ColumnHeader();
             columnHeaderAudioFilesDirectory = new ColumnHeader();
             groupBoxEncoderSettings = new GroupBox();
-            radioButton_Hidden_ModeMP3_OFF = new RadioButton();
-            radioButtonModeCBR = new RadioButton();
-            radioButtonModeABR = new RadioButton();
-            radioButtonModeVBR = new RadioButton();
-            trackBarVBR = new TrackBar();
-            trackBarABR = new TrackBar();
-            trackBarCBR = new TrackBar();
-            labelCBRValue = new Label();
-            labelABRValue = new Label();
-            labelVBRValue = new Label();
-            panelAdditionalOptions_1 = new Panel();
-            checkBoxParameter_q = new CheckBox();
-            labelParameter_qValue = new Label();
-            checkBoxChannelsModes = new CheckBox();
-            radioButtonJointStereo = new RadioButton();
-            radioButtonStereo = new RadioButton();
-            radioButtonMono = new RadioButton();
-            trackBarParameter_q = new TrackBar();
+            radioButton_Hidden_Mode_OFF_MP3 = new RadioButton();
+            radioButtonModeCBR_MP3 = new RadioButton();
+            radioButtonModeABR_MP3 = new RadioButton();
+            radioButtonModeVBR_MP3 = new RadioButton();
+            trackBarVBR_MP3 = new TrackBar();
+            trackBarABR_MP3 = new TrackBar();
+            trackBarCBR_MP3 = new TrackBar();
+            labelCBRValue_MP3 = new Label();
+            labelABRValue_MP3 = new Label();
+            labelVBRValue_MP3 = new Label();
+            panelAdditionalOptions_1_MP3 = new Panel();
+            checkBoxParameter_q_MP3 = new CheckBox();
+            labelParameter_qValue_MP3 = new Label();
+            checkBoxChannelsModes_MP3 = new CheckBox();
+            radioButtonJointStereo_MP3 = new RadioButton();
+            radioButtonStereo_MP3 = new RadioButton();
+            radioButtonMono_MP3 = new RadioButton();
+            trackBarParameter_q_MP3 = new TrackBar();
             buttonSaveUserPreset6 = new Button();
             buttonSaveUserPreset5 = new Button();
             buttonSaveUserPreset4 = new Button();
@@ -116,11 +116,11 @@
             splitContainerEncodersAndAudioFlies.SuspendLayout();
             groupBoxAudioFiles.SuspendLayout();
             groupBoxEncoderSettings.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarVBR).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)trackBarABR).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)trackBarCBR).BeginInit();
-            panelAdditionalOptions_1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarParameter_q).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarVBR_MP3).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarABR_MP3).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarCBR_MP3).BeginInit();
+            panelAdditionalOptions_1_MP3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)trackBarParameter_q_MP3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarSeek).BeginInit();
             tableLayoutPanelMain.SuspendLayout();
@@ -250,17 +250,17 @@
             // 
             // groupBoxEncoderSettings
             // 
-            groupBoxEncoderSettings.Controls.Add(radioButton_Hidden_ModeMP3_OFF);
-            groupBoxEncoderSettings.Controls.Add(radioButtonModeCBR);
-            groupBoxEncoderSettings.Controls.Add(radioButtonModeABR);
-            groupBoxEncoderSettings.Controls.Add(radioButtonModeVBR);
-            groupBoxEncoderSettings.Controls.Add(trackBarVBR);
-            groupBoxEncoderSettings.Controls.Add(trackBarABR);
-            groupBoxEncoderSettings.Controls.Add(trackBarCBR);
-            groupBoxEncoderSettings.Controls.Add(labelCBRValue);
-            groupBoxEncoderSettings.Controls.Add(labelABRValue);
-            groupBoxEncoderSettings.Controls.Add(labelVBRValue);
-            groupBoxEncoderSettings.Controls.Add(panelAdditionalOptions_1);
+            groupBoxEncoderSettings.Controls.Add(radioButton_Hidden_Mode_OFF_MP3);
+            groupBoxEncoderSettings.Controls.Add(radioButtonModeCBR_MP3);
+            groupBoxEncoderSettings.Controls.Add(radioButtonModeABR_MP3);
+            groupBoxEncoderSettings.Controls.Add(radioButtonModeVBR_MP3);
+            groupBoxEncoderSettings.Controls.Add(trackBarVBR_MP3);
+            groupBoxEncoderSettings.Controls.Add(trackBarABR_MP3);
+            groupBoxEncoderSettings.Controls.Add(trackBarCBR_MP3);
+            groupBoxEncoderSettings.Controls.Add(labelCBRValue_MP3);
+            groupBoxEncoderSettings.Controls.Add(labelABRValue_MP3);
+            groupBoxEncoderSettings.Controls.Add(labelVBRValue_MP3);
+            groupBoxEncoderSettings.Controls.Add(panelAdditionalOptions_1_MP3);
             groupBoxEncoderSettings.Location = new Point(3, 3);
             groupBoxEncoderSettings.Name = "groupBoxEncoderSettings";
             groupBoxEncoderSettings.Size = new Size(423, 229);
@@ -268,230 +268,230 @@
             groupBoxEncoderSettings.TabStop = false;
             groupBoxEncoderSettings.Text = "Encoder Settings";
             // 
-            // radioButton_Hidden_ModeMP3_OFF
+            // radioButton_Hidden_Mode_OFF_MP3
             // 
-            radioButton_Hidden_ModeMP3_OFF.AutoSize = true;
-            radioButton_Hidden_ModeMP3_OFF.Location = new Point(6, 111);
-            radioButton_Hidden_ModeMP3_OFF.Name = "radioButton_Hidden_ModeMP3_OFF";
-            radioButton_Hidden_ModeMP3_OFF.Size = new Size(14, 13);
-            radioButton_Hidden_ModeMP3_OFF.TabIndex = 11;
-            radioButton_Hidden_ModeMP3_OFF.UseVisualStyleBackColor = true;
-            radioButton_Hidden_ModeMP3_OFF.Visible = false;
-            radioButton_Hidden_ModeMP3_OFF.CheckedChanged += RadioButtonMode_CheckedChanged;
+            radioButton_Hidden_Mode_OFF_MP3.AutoSize = true;
+            radioButton_Hidden_Mode_OFF_MP3.Location = new Point(6, 111);
+            radioButton_Hidden_Mode_OFF_MP3.Name = "radioButton_Hidden_Mode_OFF_MP3";
+            radioButton_Hidden_Mode_OFF_MP3.Size = new Size(14, 13);
+            radioButton_Hidden_Mode_OFF_MP3.TabIndex = 11;
+            radioButton_Hidden_Mode_OFF_MP3.UseVisualStyleBackColor = true;
+            radioButton_Hidden_Mode_OFF_MP3.Visible = false;
+            radioButton_Hidden_Mode_OFF_MP3.CheckedChanged += RadioButtonMode_CheckedChanged;
             // 
-            // radioButtonModeCBR
+            // radioButtonModeCBR_MP3
             // 
-            radioButtonModeCBR.AutoSize = true;
-            radioButtonModeCBR.Checked = true;
-            radioButtonModeCBR.Location = new Point(6, 22);
-            radioButtonModeCBR.Name = "radioButtonModeCBR";
-            radioButtonModeCBR.Size = new Size(47, 19);
-            radioButtonModeCBR.TabIndex = 0;
-            radioButtonModeCBR.TabStop = true;
-            radioButtonModeCBR.Text = "CBR";
-            radioButtonModeCBR.UseVisualStyleBackColor = true;
-            radioButtonModeCBR.CheckedChanged += RadioButtonMode_CheckedChanged;
+            radioButtonModeCBR_MP3.AutoSize = true;
+            radioButtonModeCBR_MP3.Checked = true;
+            radioButtonModeCBR_MP3.Location = new Point(6, 22);
+            radioButtonModeCBR_MP3.Name = "radioButtonModeCBR_MP3";
+            radioButtonModeCBR_MP3.Size = new Size(47, 19);
+            radioButtonModeCBR_MP3.TabIndex = 0;
+            radioButtonModeCBR_MP3.TabStop = true;
+            radioButtonModeCBR_MP3.Text = "CBR";
+            radioButtonModeCBR_MP3.UseVisualStyleBackColor = true;
+            radioButtonModeCBR_MP3.CheckedChanged += RadioButtonMode_CheckedChanged;
             // 
-            // radioButtonModeABR
+            // radioButtonModeABR_MP3
             // 
-            radioButtonModeABR.AutoSize = true;
-            radioButtonModeABR.Location = new Point(6, 54);
-            radioButtonModeABR.Name = "radioButtonModeABR";
-            radioButtonModeABR.Size = new Size(47, 19);
-            radioButtonModeABR.TabIndex = 0;
-            radioButtonModeABR.Text = "ABR";
-            radioButtonModeABR.UseVisualStyleBackColor = true;
-            radioButtonModeABR.CheckedChanged += RadioButtonMode_CheckedChanged;
+            radioButtonModeABR_MP3.AutoSize = true;
+            radioButtonModeABR_MP3.Location = new Point(6, 54);
+            radioButtonModeABR_MP3.Name = "radioButtonModeABR_MP3";
+            radioButtonModeABR_MP3.Size = new Size(47, 19);
+            radioButtonModeABR_MP3.TabIndex = 0;
+            radioButtonModeABR_MP3.Text = "ABR";
+            radioButtonModeABR_MP3.UseVisualStyleBackColor = true;
+            radioButtonModeABR_MP3.CheckedChanged += RadioButtonMode_CheckedChanged;
             // 
-            // radioButtonModeVBR
+            // radioButtonModeVBR_MP3
             // 
-            radioButtonModeVBR.AutoSize = true;
-            radioButtonModeVBR.Location = new Point(6, 86);
-            radioButtonModeVBR.Name = "radioButtonModeVBR";
-            radioButtonModeVBR.Size = new Size(46, 19);
-            radioButtonModeVBR.TabIndex = 0;
-            radioButtonModeVBR.Text = "VBR";
-            toolTip1.SetToolTip(radioButtonModeVBR, "Note!\r\n\r\nV10...V14 may be compatible with LAME v4.1");
-            radioButtonModeVBR.UseVisualStyleBackColor = true;
-            radioButtonModeVBR.CheckedChanged += RadioButtonMode_CheckedChanged;
+            radioButtonModeVBR_MP3.AutoSize = true;
+            radioButtonModeVBR_MP3.Location = new Point(6, 86);
+            radioButtonModeVBR_MP3.Name = "radioButtonModeVBR_MP3";
+            radioButtonModeVBR_MP3.Size = new Size(46, 19);
+            radioButtonModeVBR_MP3.TabIndex = 0;
+            radioButtonModeVBR_MP3.Text = "VBR";
+            toolTip1.SetToolTip(radioButtonModeVBR_MP3, "Note!\r\n\r\nV10...V14 may be compatible with LAME v4.1");
+            radioButtonModeVBR_MP3.UseVisualStyleBackColor = true;
+            radioButtonModeVBR_MP3.CheckedChanged += RadioButtonMode_CheckedChanged;
             // 
-            // trackBarVBR
+            // trackBarVBR_MP3
             // 
-            trackBarVBR.Enabled = false;
-            trackBarVBR.LargeChange = 1;
-            trackBarVBR.Location = new Point(82, 86);
-            trackBarVBR.Maximum = 0;
-            trackBarVBR.Minimum = -14;
-            trackBarVBR.Name = "trackBarVBR";
-            trackBarVBR.Size = new Size(274, 45);
-            trackBarVBR.TabIndex = 5;
-            trackBarVBR.TickStyle = TickStyle.TopLeft;
-            trackBarVBR.Scroll += TrackBarVBR_Scroll;
+            trackBarVBR_MP3.Enabled = false;
+            trackBarVBR_MP3.LargeChange = 1;
+            trackBarVBR_MP3.Location = new Point(82, 86);
+            trackBarVBR_MP3.Maximum = 0;
+            trackBarVBR_MP3.Minimum = -14;
+            trackBarVBR_MP3.Name = "trackBarVBR_MP3";
+            trackBarVBR_MP3.Size = new Size(274, 45);
+            trackBarVBR_MP3.TabIndex = 5;
+            trackBarVBR_MP3.TickStyle = TickStyle.TopLeft;
+            trackBarVBR_MP3.Scroll += TrackBarVBR_Scroll;
             // 
-            // trackBarABR
+            // trackBarABR_MP3
             // 
-            trackBarABR.Enabled = false;
-            trackBarABR.LargeChange = 1;
-            trackBarABR.Location = new Point(82, 54);
-            trackBarABR.Maximum = 16;
-            trackBarABR.Name = "trackBarABR";
-            trackBarABR.Size = new Size(274, 45);
-            trackBarABR.TabIndex = 3;
-            trackBarABR.TickStyle = TickStyle.TopLeft;
-            trackBarABR.Value = 16;
-            trackBarABR.Scroll += TrackBarABR_Scroll;
+            trackBarABR_MP3.Enabled = false;
+            trackBarABR_MP3.LargeChange = 1;
+            trackBarABR_MP3.Location = new Point(82, 54);
+            trackBarABR_MP3.Maximum = 16;
+            trackBarABR_MP3.Name = "trackBarABR_MP3";
+            trackBarABR_MP3.Size = new Size(274, 45);
+            trackBarABR_MP3.TabIndex = 3;
+            trackBarABR_MP3.TickStyle = TickStyle.TopLeft;
+            trackBarABR_MP3.Value = 16;
+            trackBarABR_MP3.Scroll += TrackBarABR_Scroll;
             // 
-            // trackBarCBR
+            // trackBarCBR_MP3
             // 
-            trackBarCBR.LargeChange = 1;
-            trackBarCBR.Location = new Point(82, 22);
-            trackBarCBR.Maximum = 16;
-            trackBarCBR.Name = "trackBarCBR";
-            trackBarCBR.Size = new Size(274, 45);
-            trackBarCBR.TabIndex = 1;
-            trackBarCBR.TickStyle = TickStyle.TopLeft;
-            trackBarCBR.Value = 16;
-            trackBarCBR.Scroll += TrackBarCBR_Scroll;
+            trackBarCBR_MP3.LargeChange = 1;
+            trackBarCBR_MP3.Location = new Point(82, 22);
+            trackBarCBR_MP3.Maximum = 16;
+            trackBarCBR_MP3.Name = "trackBarCBR_MP3";
+            trackBarCBR_MP3.Size = new Size(274, 45);
+            trackBarCBR_MP3.TabIndex = 1;
+            trackBarCBR_MP3.TickStyle = TickStyle.TopLeft;
+            trackBarCBR_MP3.Value = 16;
+            trackBarCBR_MP3.Scroll += TrackBarCBR_Scroll;
             // 
-            // labelCBRValue
+            // labelCBRValue_MP3
             // 
-            labelCBRValue.AutoSize = true;
-            labelCBRValue.Location = new Point(362, 24);
-            labelCBRValue.MinimumSize = new Size(24, 0);
-            labelCBRValue.Name = "labelCBRValue";
-            labelCBRValue.Size = new Size(25, 15);
-            labelCBRValue.TabIndex = 2;
-            labelCBRValue.Text = "320";
-            labelCBRValue.TextAlign = ContentAlignment.MiddleCenter;
+            labelCBRValue_MP3.AutoSize = true;
+            labelCBRValue_MP3.Location = new Point(362, 24);
+            labelCBRValue_MP3.MinimumSize = new Size(24, 0);
+            labelCBRValue_MP3.Name = "labelCBRValue_MP3";
+            labelCBRValue_MP3.Size = new Size(25, 15);
+            labelCBRValue_MP3.TabIndex = 2;
+            labelCBRValue_MP3.Text = "320";
+            labelCBRValue_MP3.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // labelABRValue
+            // labelABRValue_MP3
             // 
-            labelABRValue.AutoSize = true;
-            labelABRValue.Enabled = false;
-            labelABRValue.Location = new Point(362, 56);
-            labelABRValue.MinimumSize = new Size(24, 0);
-            labelABRValue.Name = "labelABRValue";
-            labelABRValue.Size = new Size(25, 15);
-            labelABRValue.TabIndex = 4;
-            labelABRValue.Text = "320";
-            labelABRValue.TextAlign = ContentAlignment.MiddleCenter;
+            labelABRValue_MP3.AutoSize = true;
+            labelABRValue_MP3.Enabled = false;
+            labelABRValue_MP3.Location = new Point(362, 56);
+            labelABRValue_MP3.MinimumSize = new Size(24, 0);
+            labelABRValue_MP3.Name = "labelABRValue_MP3";
+            labelABRValue_MP3.Size = new Size(25, 15);
+            labelABRValue_MP3.TabIndex = 4;
+            labelABRValue_MP3.Text = "320";
+            labelABRValue_MP3.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // labelVBRValue
+            // labelVBRValue_MP3
             // 
-            labelVBRValue.AutoSize = true;
-            labelVBRValue.Enabled = false;
-            labelVBRValue.Location = new Point(362, 88);
-            labelVBRValue.MinimumSize = new Size(24, 0);
-            labelVBRValue.Name = "labelVBRValue";
-            labelVBRValue.Size = new Size(24, 15);
-            labelVBRValue.TabIndex = 6;
-            labelVBRValue.Text = "V0";
-            labelVBRValue.TextAlign = ContentAlignment.MiddleCenter;
+            labelVBRValue_MP3.AutoSize = true;
+            labelVBRValue_MP3.Enabled = false;
+            labelVBRValue_MP3.Location = new Point(362, 88);
+            labelVBRValue_MP3.MinimumSize = new Size(24, 0);
+            labelVBRValue_MP3.Name = "labelVBRValue_MP3";
+            labelVBRValue_MP3.Size = new Size(24, 15);
+            labelVBRValue_MP3.TabIndex = 6;
+            labelVBRValue_MP3.Text = "V0";
+            labelVBRValue_MP3.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // panelAdditionalOptions_1
+            // panelAdditionalOptions_1_MP3
             // 
-            panelAdditionalOptions_1.Controls.Add(checkBoxParameter_q);
-            panelAdditionalOptions_1.Controls.Add(labelParameter_qValue);
-            panelAdditionalOptions_1.Controls.Add(checkBoxChannelsModes);
-            panelAdditionalOptions_1.Controls.Add(radioButtonJointStereo);
-            panelAdditionalOptions_1.Controls.Add(radioButtonStereo);
-            panelAdditionalOptions_1.Controls.Add(radioButtonMono);
-            panelAdditionalOptions_1.Controls.Add(trackBarParameter_q);
-            panelAdditionalOptions_1.Location = new Point(3, 148);
-            panelAdditionalOptions_1.Margin = new Padding(0);
-            panelAdditionalOptions_1.Name = "panelAdditionalOptions_1";
-            panelAdditionalOptions_1.Size = new Size(400, 56);
-            panelAdditionalOptions_1.TabIndex = 10;
+            panelAdditionalOptions_1_MP3.Controls.Add(checkBoxParameter_q_MP3);
+            panelAdditionalOptions_1_MP3.Controls.Add(labelParameter_qValue_MP3);
+            panelAdditionalOptions_1_MP3.Controls.Add(checkBoxChannelsModes_MP3);
+            panelAdditionalOptions_1_MP3.Controls.Add(radioButtonJointStereo_MP3);
+            panelAdditionalOptions_1_MP3.Controls.Add(radioButtonStereo_MP3);
+            panelAdditionalOptions_1_MP3.Controls.Add(radioButtonMono_MP3);
+            panelAdditionalOptions_1_MP3.Controls.Add(trackBarParameter_q_MP3);
+            panelAdditionalOptions_1_MP3.Location = new Point(3, 148);
+            panelAdditionalOptions_1_MP3.Margin = new Padding(0);
+            panelAdditionalOptions_1_MP3.Name = "panelAdditionalOptions_1_MP3";
+            panelAdditionalOptions_1_MP3.Size = new Size(400, 56);
+            panelAdditionalOptions_1_MP3.TabIndex = 10;
             // 
-            // checkBoxParameter_q
+            // checkBoxParameter_q_MP3
             // 
-            checkBoxParameter_q.AutoSize = true;
-            checkBoxParameter_q.Location = new Point(3, 3);
-            checkBoxParameter_q.Name = "checkBoxParameter_q";
-            checkBoxParameter_q.Size = new Size(64, 19);
-            checkBoxParameter_q.TabIndex = 0;
-            checkBoxParameter_q.Text = "Quality";
-            toolTip1.SetToolTip(checkBoxParameter_q, "Force/override algorithm quality selection");
-            checkBoxParameter_q.UseVisualStyleBackColor = true;
-            checkBoxParameter_q.CheckedChanged += CheckBoxQ_CheckedChanged;
+            checkBoxParameter_q_MP3.AutoSize = true;
+            checkBoxParameter_q_MP3.Location = new Point(3, 3);
+            checkBoxParameter_q_MP3.Name = "checkBoxParameter_q_MP3";
+            checkBoxParameter_q_MP3.Size = new Size(64, 19);
+            checkBoxParameter_q_MP3.TabIndex = 0;
+            checkBoxParameter_q_MP3.Text = "Quality";
+            toolTip1.SetToolTip(checkBoxParameter_q_MP3, "Force/override algorithm quality selection");
+            checkBoxParameter_q_MP3.UseVisualStyleBackColor = true;
+            checkBoxParameter_q_MP3.CheckedChanged += CheckBoxQ_CheckedChanged;
             // 
-            // labelParameter_qValue
+            // labelParameter_qValue_MP3
             // 
-            labelParameter_qValue.AutoSize = true;
-            labelParameter_qValue.Enabled = false;
-            labelParameter_qValue.Location = new Point(359, 4);
-            labelParameter_qValue.MinimumSize = new Size(24, 0);
-            labelParameter_qValue.Name = "labelParameter_qValue";
-            labelParameter_qValue.Size = new Size(24, 15);
-            labelParameter_qValue.TabIndex = 2;
-            labelParameter_qValue.Text = "q0";
-            labelParameter_qValue.TextAlign = ContentAlignment.MiddleCenter;
+            labelParameter_qValue_MP3.AutoSize = true;
+            labelParameter_qValue_MP3.Enabled = false;
+            labelParameter_qValue_MP3.Location = new Point(359, 4);
+            labelParameter_qValue_MP3.MinimumSize = new Size(24, 0);
+            labelParameter_qValue_MP3.Name = "labelParameter_qValue_MP3";
+            labelParameter_qValue_MP3.Size = new Size(24, 15);
+            labelParameter_qValue_MP3.TabIndex = 2;
+            labelParameter_qValue_MP3.Text = "q0";
+            labelParameter_qValue_MP3.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // checkBoxChannelsModes
+            // checkBoxChannelsModes_MP3
             // 
-            checkBoxChannelsModes.AutoSize = true;
-            checkBoxChannelsModes.Location = new Point(3, 35);
-            checkBoxChannelsModes.Name = "checkBoxChannelsModes";
-            checkBoxChannelsModes.Size = new Size(109, 19);
-            checkBoxChannelsModes.TabIndex = 3;
-            checkBoxChannelsModes.Text = "Channel Modes";
-            toolTip1.SetToolTip(checkBoxChannelsModes, "Force/override channel processing mode");
-            checkBoxChannelsModes.UseVisualStyleBackColor = true;
-            checkBoxChannelsModes.CheckedChanged += CheckBoxChannelsMix_CheckedChanged;
+            checkBoxChannelsModes_MP3.AutoSize = true;
+            checkBoxChannelsModes_MP3.Location = new Point(3, 35);
+            checkBoxChannelsModes_MP3.Name = "checkBoxChannelsModes_MP3";
+            checkBoxChannelsModes_MP3.Size = new Size(109, 19);
+            checkBoxChannelsModes_MP3.TabIndex = 3;
+            checkBoxChannelsModes_MP3.Text = "Channel Modes";
+            toolTip1.SetToolTip(checkBoxChannelsModes_MP3, "Force/override channel processing mode");
+            checkBoxChannelsModes_MP3.UseVisualStyleBackColor = true;
+            checkBoxChannelsModes_MP3.CheckedChanged += CheckBoxChannelsMix_CheckedChanged;
             // 
-            // radioButtonJointStereo
+            // radioButtonJointStereo_MP3
             // 
-            radioButtonJointStereo.AutoSize = true;
-            radioButtonJointStereo.Checked = true;
-            radioButtonJointStereo.Enabled = false;
-            radioButtonJointStereo.Location = new Point(118, 34);
-            radioButtonJointStereo.Name = "radioButtonJointStereo";
-            radioButtonJointStereo.Size = new Size(40, 19);
-            radioButtonJointStereo.TabIndex = 4;
-            radioButtonJointStereo.TabStop = true;
-            radioButtonJointStereo.Text = "J/S";
-            toolTip1.SetToolTip(radioButtonJointStereo, "-m j\tautomatic switch between L/R and M/S stereo");
-            radioButtonJointStereo.UseVisualStyleBackColor = true;
-            radioButtonJointStereo.CheckedChanged += RadioButtonStereoMode_CheckedChanged;
+            radioButtonJointStereo_MP3.AutoSize = true;
+            radioButtonJointStereo_MP3.Checked = true;
+            radioButtonJointStereo_MP3.Enabled = false;
+            radioButtonJointStereo_MP3.Location = new Point(118, 34);
+            radioButtonJointStereo_MP3.Name = "radioButtonJointStereo_MP3";
+            radioButtonJointStereo_MP3.Size = new Size(40, 19);
+            radioButtonJointStereo_MP3.TabIndex = 4;
+            radioButtonJointStereo_MP3.TabStop = true;
+            radioButtonJointStereo_MP3.Text = "J/S";
+            toolTip1.SetToolTip(radioButtonJointStereo_MP3, "-m j\tautomatic switch between L/R and M/S stereo");
+            radioButtonJointStereo_MP3.UseVisualStyleBackColor = true;
+            radioButtonJointStereo_MP3.CheckedChanged += RadioButtonStereoMode_CheckedChanged;
             // 
-            // radioButtonStereo
+            // radioButtonStereo_MP3
             // 
-            radioButtonStereo.AutoSize = true;
-            radioButtonStereo.Enabled = false;
-            radioButtonStereo.Location = new Point(164, 34);
-            radioButtonStereo.Name = "radioButtonStereo";
-            radioButtonStereo.Size = new Size(58, 19);
-            radioButtonStereo.TabIndex = 5;
-            radioButtonStereo.Text = "Stereo";
-            toolTip1.SetToolTip(radioButtonStereo, "-m s\tforced L/R stereo");
-            radioButtonStereo.UseVisualStyleBackColor = true;
-            radioButtonStereo.CheckedChanged += RadioButtonStereoMode_CheckedChanged;
+            radioButtonStereo_MP3.AutoSize = true;
+            radioButtonStereo_MP3.Enabled = false;
+            radioButtonStereo_MP3.Location = new Point(164, 34);
+            radioButtonStereo_MP3.Name = "radioButtonStereo_MP3";
+            radioButtonStereo_MP3.Size = new Size(58, 19);
+            radioButtonStereo_MP3.TabIndex = 5;
+            radioButtonStereo_MP3.Text = "Stereo";
+            toolTip1.SetToolTip(radioButtonStereo_MP3, "-m s\tforced L/R stereo");
+            radioButtonStereo_MP3.UseVisualStyleBackColor = true;
+            radioButtonStereo_MP3.CheckedChanged += RadioButtonStereoMode_CheckedChanged;
             // 
-            // radioButtonMono
+            // radioButtonMono_MP3
             // 
-            radioButtonMono.AutoSize = true;
-            radioButtonMono.Enabled = false;
-            radioButtonMono.Location = new Point(228, 34);
-            radioButtonMono.Name = "radioButtonMono";
-            radioButtonMono.Size = new Size(57, 19);
-            radioButtonMono.TabIndex = 6;
-            radioButtonMono.Text = "Mono";
-            toolTip1.SetToolTip(radioButtonMono, "-m m\tmono");
-            radioButtonMono.UseVisualStyleBackColor = true;
-            radioButtonMono.CheckedChanged += RadioButtonStereoMode_CheckedChanged;
+            radioButtonMono_MP3.AutoSize = true;
+            radioButtonMono_MP3.Enabled = false;
+            radioButtonMono_MP3.Location = new Point(228, 34);
+            radioButtonMono_MP3.Name = "radioButtonMono_MP3";
+            radioButtonMono_MP3.Size = new Size(57, 19);
+            radioButtonMono_MP3.TabIndex = 6;
+            radioButtonMono_MP3.Text = "Mono";
+            toolTip1.SetToolTip(radioButtonMono_MP3, "-m m\tmono");
+            radioButtonMono_MP3.UseVisualStyleBackColor = true;
+            radioButtonMono_MP3.CheckedChanged += RadioButtonStereoMode_CheckedChanged;
             // 
-            // trackBarParameter_q
+            // trackBarParameter_q_MP3
             // 
-            trackBarParameter_q.Enabled = false;
-            trackBarParameter_q.LargeChange = 1;
-            trackBarParameter_q.Location = new Point(79, 3);
-            trackBarParameter_q.Maximum = 0;
-            trackBarParameter_q.Minimum = -9;
-            trackBarParameter_q.Name = "trackBarParameter_q";
-            trackBarParameter_q.Size = new Size(274, 45);
-            trackBarParameter_q.TabIndex = 1;
-            trackBarParameter_q.TickStyle = TickStyle.TopLeft;
-            trackBarParameter_q.Scroll += TrackBarQ_Scroll;
+            trackBarParameter_q_MP3.Enabled = false;
+            trackBarParameter_q_MP3.LargeChange = 1;
+            trackBarParameter_q_MP3.Location = new Point(79, 3);
+            trackBarParameter_q_MP3.Maximum = 0;
+            trackBarParameter_q_MP3.Minimum = -9;
+            trackBarParameter_q_MP3.Name = "trackBarParameter_q_MP3";
+            trackBarParameter_q_MP3.Size = new Size(274, 45);
+            trackBarParameter_q_MP3.TabIndex = 1;
+            trackBarParameter_q_MP3.TickStyle = TickStyle.TopLeft;
+            trackBarParameter_q_MP3.Scroll += TrackBarQ_Scroll;
             // 
             // buttonSaveUserPreset6
             // 
@@ -1045,12 +1045,12 @@
             groupBoxAudioFiles.ResumeLayout(false);
             groupBoxEncoderSettings.ResumeLayout(false);
             groupBoxEncoderSettings.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarVBR).EndInit();
-            ((System.ComponentModel.ISupportInitialize)trackBarABR).EndInit();
-            ((System.ComponentModel.ISupportInitialize)trackBarCBR).EndInit();
-            panelAdditionalOptions_1.ResumeLayout(false);
-            panelAdditionalOptions_1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarParameter_q).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarVBR_MP3).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarABR_MP3).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarCBR_MP3).EndInit();
+            panelAdditionalOptions_1_MP3.ResumeLayout(false);
+            panelAdditionalOptions_1_MP3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)trackBarParameter_q_MP3).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarSeek).EndInit();
             tableLayoutPanelMain.ResumeLayout(false);
@@ -1067,23 +1067,23 @@
         private GroupBox groupBoxEncoders;
         private GroupBox groupBoxEncoderSettings;
         private GroupBox groupBoxAudioFiles;
-        private TrackBar trackBarABR;
-        private TrackBar trackBarVBR;
-        private TrackBar trackBarCBR;
-        private RadioButton radioButtonModeABR;
-        private RadioButton radioButtonModeVBR;
-        private RadioButton radioButtonModeCBR;
-        private CheckBox checkBoxParameter_q;
-        private TrackBar trackBarParameter_q;
-        private Label labelCBRValue;
-        private CheckBox checkBoxChannelsModes;
-        private RadioButton radioButtonStereo;
-        private Label labelParameter_qValue;
-        private Label labelABRValue;
-        private Label labelVBRValue;
-        private RadioButton radioButtonMono;
-        private RadioButton radioButtonJointStereo;
-        private Panel panelAdditionalOptions_1;
+        private TrackBar trackBarABR_MP3;
+        private TrackBar trackBarVBR_MP3;
+        private TrackBar trackBarCBR_MP3;
+        private RadioButton radioButtonModeABR_MP3;
+        private RadioButton radioButtonModeVBR_MP3;
+        private RadioButton radioButtonModeCBR_MP3;
+        private CheckBox checkBoxParameter_q_MP3;
+        private TrackBar trackBarParameter_q_MP3;
+        private Label labelCBRValue_MP3;
+        private CheckBox checkBoxChannelsModes_MP3;
+        private RadioButton radioButtonStereo_MP3;
+        private Label labelParameter_qValue_MP3;
+        private Label labelABRValue_MP3;
+        private Label labelVBRValue_MP3;
+        private RadioButton radioButtonMono_MP3;
+        private RadioButton radioButtonJointStereo_MP3;
+        private Panel panelAdditionalOptions_1_MP3;
         private ListView listViewAudioFiles;
         private ListView listViewEncoders;
         private Button buttonStop;
@@ -1139,7 +1139,7 @@
         private Button buttonSaveUserPreset3;
         private Button buttonSaveUserPreset2;
         private GroupBox groupBox1;
-        private RadioButton radioButton_Hidden_ModeMP3_OFF;
+        private RadioButton radioButton_Hidden_Mode_OFF_MP3;
         private RadioButton radioButton_Hidden_UserPreset_OFF;
         private CheckBox checkBoxCheckForUpdates;
         private Label labelNoUpdates;

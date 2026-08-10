@@ -781,26 +781,26 @@ namespace Codec_Playground_H
                 _settings.EncoderSettings.MixBalanceValue = trackBarMixBalance.Value;
                 _settings.CheckForUpdates = checkBoxCheckForUpdates.Checked;
 
-                _settings.EncoderSettings.ModeCBR = radioButtonModeCBR.Checked;
-                _settings.EncoderSettings.ModeABR = radioButtonModeABR.Checked;
-                _settings.EncoderSettings.ModeVBR = radioButtonModeVBR.Checked;
+                _settings.EncoderSettings.ModeCBR = radioButtonModeCBR_MP3.Checked;
+                _settings.EncoderSettings.ModeABR = radioButtonModeABR_MP3.Checked;
+                _settings.EncoderSettings.ModeVBR = radioButtonModeVBR_MP3.Checked;
 
-                _settings.EncoderSettings.CbrValue = trackBarCBR.Value;
-                _settings.EncoderSettings.AbrValue = trackBarABR.Value;
-                _settings.EncoderSettings.VbrValue = trackBarVBR.Value;
-                _settings.EncoderSettings.QualityValue = trackBarParameter_q.Value;
+                _settings.EncoderSettings.CbrValue = trackBarCBR_MP3.Value;
+                _settings.EncoderSettings.AbrValue = trackBarABR_MP3.Value;
+                _settings.EncoderSettings.VbrValue = trackBarVBR_MP3.Value;
+                _settings.EncoderSettings.QualityValue = trackBarParameter_q_MP3.Value;
 
-                _settings.EncoderSettings.UseQuality = checkBoxParameter_q.Checked;
-                _settings.EncoderSettings.UseChannelModes = checkBoxChannelsModes.Checked;
+                _settings.EncoderSettings.UseQuality = checkBoxParameter_q_MP3.Checked;
+                _settings.EncoderSettings.UseChannelModes = checkBoxChannelsModes_MP3.Checked;
 
-                _settings.EncoderSettings.ChannelJointStereo = radioButtonJointStereo.Checked;
-                _settings.EncoderSettings.ChannelStereo = radioButtonStereo.Checked;
-                _settings.EncoderSettings.ChannelMono = radioButtonMono.Checked;
+                _settings.EncoderSettings.ChannelJointStereo = radioButtonJointStereo_MP3.Checked;
+                _settings.EncoderSettings.ChannelStereo = radioButtonStereo_MP3.Checked;
+                _settings.EncoderSettings.ChannelMono = radioButtonMono_MP3.Checked;
 
-                _settings.EncoderSettings.LabelCBR = labelCBRValue.Text;
-                _settings.EncoderSettings.LabelABR = labelABRValue.Text;
-                _settings.EncoderSettings.LabelVBR = labelVBRValue.Text;
-                _settings.EncoderSettings.LabelQuality = labelParameter_qValue.Text;
+                _settings.EncoderSettings.LabelCBR = labelCBRValue_MP3.Text;
+                _settings.EncoderSettings.LabelABR = labelABRValue_MP3.Text;
+                _settings.EncoderSettings.LabelVBR = labelVBRValue_MP3.Text;
+                _settings.EncoderSettings.LabelQuality = labelParameter_qValue_MP3.Text;
 
                 _settings.UserPresets.UserPreset1 = radioButtonUserPreset1.Checked;
                 _settings.UserPresets.UserPreset1Name = radioButtonUserPreset1.Text;
@@ -828,7 +828,7 @@ namespace Codec_Playground_H
 
                 Log($"📊 Saved user presets: 1={_settings.UserPresets.UserPreset1}, 2={_settings.UserPresets.UserPreset2}, 3={_settings.UserPresets.UserPreset3}, 4={_settings.UserPresets.UserPreset4}, 5={_settings.UserPresets.UserPreset5}, 6={_settings.UserPresets.UserPreset6}");
 
-                _settings.HiddenModeMP3Off = radioButton_Hidden_ModeMP3_OFF.Checked;
+                _settings.HiddenModeMP3Off = radioButton_Hidden_Mode_OFF_MP3.Checked;
                 _settings.HiddenUserPresetOff = radioButton_Hidden_UserPreset_OFF.Checked;
 
                 Log($"📊 Saved hidden radio states: ModeMP3Off={_settings.HiddenModeMP3Off}, UserPresetOff={_settings.HiddenUserPresetOff}");
@@ -1021,7 +1021,7 @@ namespace Codec_Playground_H
 
                 Log($"📊 Restored user presets: 1={_settings.UserPresets.UserPreset1}, 2={_settings.UserPresets.UserPreset2}, 3={_settings.UserPresets.UserPreset3}, 4={_settings.UserPresets.UserPreset4}, 5={_settings.UserPresets.UserPreset5}, 6={_settings.UserPresets.UserPreset6}");
 
-                radioButton_Hidden_ModeMP3_OFF.Checked = _settings.HiddenModeMP3Off;
+                radioButton_Hidden_Mode_OFF_MP3.Checked = _settings.HiddenModeMP3Off;
                 radioButton_Hidden_UserPreset_OFF.Checked = _settings.HiddenUserPresetOff;
 
                 Log($"📊 Restored hidden radio states: ModeMP3Off={_settings.HiddenModeMP3Off}, UserPresetOff={_settings.HiddenUserPresetOff}");
@@ -1078,26 +1078,26 @@ namespace Codec_Playground_H
                     labelMixBalance.Text = $"{origPct} / {encPct}";
                 }
 
-                radioButtonModeCBR.Checked = _settings.EncoderSettings.ModeCBR;
-                radioButtonModeABR.Checked = _settings.EncoderSettings.ModeABR;
-                radioButtonModeVBR.Checked = _settings.EncoderSettings.ModeVBR;
+                radioButtonModeCBR_MP3.Checked = _settings.EncoderSettings.ModeCBR;
+                radioButtonModeABR_MP3.Checked = _settings.EncoderSettings.ModeABR;
+                radioButtonModeVBR_MP3.Checked = _settings.EncoderSettings.ModeVBR;
 
-                trackBarCBR.Value = _settings.EncoderSettings.CbrValue;
-                trackBarABR.Value = _settings.EncoderSettings.AbrValue;
-                trackBarVBR.Value = _settings.EncoderSettings.VbrValue;
-                trackBarParameter_q.Value = _settings.EncoderSettings.QualityValue;
+                trackBarCBR_MP3.Value = _settings.EncoderSettings.CbrValue;
+                trackBarABR_MP3.Value = _settings.EncoderSettings.AbrValue;
+                trackBarVBR_MP3.Value = _settings.EncoderSettings.VbrValue;
+                trackBarParameter_q_MP3.Value = _settings.EncoderSettings.QualityValue;
 
-                checkBoxParameter_q.Checked = _settings.EncoderSettings.UseQuality;
-                checkBoxChannelsModes.Checked = _settings.EncoderSettings.UseChannelModes;
+                checkBoxParameter_q_MP3.Checked = _settings.EncoderSettings.UseQuality;
+                checkBoxChannelsModes_MP3.Checked = _settings.EncoderSettings.UseChannelModes;
 
-                radioButtonJointStereo.Checked = _settings.EncoderSettings.ChannelJointStereo;
-                radioButtonStereo.Checked = _settings.EncoderSettings.ChannelStereo;
-                radioButtonMono.Checked = _settings.EncoderSettings.ChannelMono;
+                radioButtonJointStereo_MP3.Checked = _settings.EncoderSettings.ChannelJointStereo;
+                radioButtonStereo_MP3.Checked = _settings.EncoderSettings.ChannelStereo;
+                radioButtonMono_MP3.Checked = _settings.EncoderSettings.ChannelMono;
 
-                labelCBRValue.Text = _settings.EncoderSettings.LabelCBR;
-                labelABRValue.Text = _settings.EncoderSettings.LabelABR;
-                labelVBRValue.Text = _settings.EncoderSettings.LabelVBR;
-                labelParameter_qValue.Text = _settings.EncoderSettings.LabelQuality;
+                labelCBRValue_MP3.Text = _settings.EncoderSettings.LabelCBR;
+                labelABRValue_MP3.Text = _settings.EncoderSettings.LabelABR;
+                labelVBRValue_MP3.Text = _settings.EncoderSettings.LabelVBR;
+                labelParameter_qValue_MP3.Text = _settings.EncoderSettings.LabelQuality;
 
                 MinimumSize = new Size(874, 515);
 
@@ -2070,31 +2070,31 @@ namespace Codec_Playground_H
             bool useChannels = false;
             string channelMode = "";
 
-            if (radioButtonModeCBR.Checked)
+            if (radioButtonModeCBR_MP3.Checked)
             {
                 mode = "CBR";
-                bitrate = CbrBitrates[trackBarCBR.Value];
+                bitrate = CbrBitrates[trackBarCBR_MP3.Value];
             }
-            else if (radioButtonModeABR.Checked)
+            else if (radioButtonModeABR_MP3.Checked)
             {
                 mode = "ABR";
-                bitrate = AbrBitrates[trackBarABR.Value];
+                bitrate = AbrBitrates[trackBarABR_MP3.Value];
             }
-            else if (radioButtonModeVBR.Checked)
+            else if (radioButtonModeVBR_MP3.Checked)
             {
                 mode = "VBR";
-                vbrValue = Math.Abs(trackBarVBR.Value);
+                vbrValue = Math.Abs(trackBarVBR_MP3.Value);
             }
 
-            useQ = checkBoxParameter_q.Checked;
-            if (useQ) qValue = Math.Abs(trackBarParameter_q.Value);
+            useQ = checkBoxParameter_q_MP3.Checked;
+            if (useQ) qValue = Math.Abs(trackBarParameter_q_MP3.Value);
 
-            useChannels = checkBoxChannelsModes.Checked;
+            useChannels = checkBoxChannelsModes_MP3.Checked;
             if (useChannels)
             {
-                if (radioButtonJointStereo.Checked) channelMode = "j";
-                else if (radioButtonStereo.Checked) channelMode = "s";
-                else if (radioButtonMono.Checked) channelMode = "m";
+                if (radioButtonJointStereo_MP3.Checked) channelMode = "j";
+                else if (radioButtonStereo_MP3.Checked) channelMode = "s";
+                else if (radioButtonMono_MP3.Checked) channelMode = "m";
             }
 
             StringBuilder args = new();
@@ -3077,14 +3077,14 @@ namespace Codec_Playground_H
 
         private void RadioButtonMode_CheckedChanged(object? sender, EventArgs e)
         {
-            if (sender is RadioButton rb && (rb == radioButton_Hidden_ModeMP3_OFF || rb == radioButton_Hidden_UserPreset_OFF))
+            if (sender is RadioButton rb && (rb == radioButton_Hidden_Mode_OFF_MP3 || rb == radioButton_Hidden_UserPreset_OFF))
                 return;
 
             if (sender is not RadioButton radio || !radio.Checked)
                 return;
 
-            bool isMP3SettingsModeButton = radio == radioButtonModeCBR || radio == radioButtonModeABR ||
-                                           radio == radioButtonModeVBR;
+            bool isMP3SettingsModeButton = radio == radioButtonModeCBR_MP3 || radio == radioButtonModeABR_MP3 ||
+                                           radio == radioButtonModeVBR_MP3;
 
             bool isUserPresetButton = radio == radioButtonUserPreset1 || radio == radioButtonUserPreset2 ||
                                       radio == radioButtonUserPreset3 || radio == radioButtonUserPreset4 ||
@@ -3099,14 +3099,14 @@ namespace Codec_Playground_H
                 radioButtonUserPreset5.Checked = false;
                 radioButtonUserPreset6.Checked = false;
                 radioButton_Hidden_UserPreset_OFF.Checked = true;
-                radioButton_Hidden_ModeMP3_OFF.Checked = false;
+                radioButton_Hidden_Mode_OFF_MP3.Checked = false;
             }
             else if (isUserPresetButton)
             {
-                radioButtonModeCBR.Checked = false;
-                radioButtonModeABR.Checked = false;
-                radioButtonModeVBR.Checked = false;
-                radioButton_Hidden_ModeMP3_OFF.Checked = true;
+                radioButtonModeCBR_MP3.Checked = false;
+                radioButtonModeABR_MP3.Checked = false;
+                radioButtonModeVBR_MP3.Checked = false;
+                radioButton_Hidden_Mode_OFF_MP3.Checked = true;
                 radioButton_Hidden_UserPreset_OFF.Checked = false;
             }
             else
@@ -3114,8 +3114,8 @@ namespace Codec_Playground_H
                 return;
             }
 
-            bool isMP3SettingsSelected = radioButtonModeCBR.Checked || radioButtonModeABR.Checked ||
-                                         radioButtonModeVBR.Checked;
+            bool isMP3SettingsSelected = radioButtonModeCBR_MP3.Checked || radioButtonModeABR_MP3.Checked ||
+                                         radioButtonModeVBR_MP3.Checked;
 
             bool isUserPresetSelected = radioButtonUserPreset1.Checked || radioButtonUserPreset2.Checked ||
                                         radioButtonUserPreset3.Checked || radioButtonUserPreset4.Checked ||
@@ -3123,21 +3123,21 @@ namespace Codec_Playground_H
 
             if (isMP3SettingsSelected)
             {
-                trackBarCBR.Enabled = radioButtonModeCBR.Checked;
-                labelCBRValue.Enabled = radioButtonModeCBR.Checked;
-                trackBarABR.Enabled = radioButtonModeABR.Checked;
-                labelABRValue.Enabled = radioButtonModeABR.Checked;
-                trackBarVBR.Enabled = radioButtonModeVBR.Checked;
-                labelVBRValue.Enabled = radioButtonModeVBR.Checked;
+                trackBarCBR_MP3.Enabled = radioButtonModeCBR_MP3.Checked;
+                labelCBRValue_MP3.Enabled = radioButtonModeCBR_MP3.Checked;
+                trackBarABR_MP3.Enabled = radioButtonModeABR_MP3.Checked;
+                labelABRValue_MP3.Enabled = radioButtonModeABR_MP3.Checked;
+                trackBarVBR_MP3.Enabled = radioButtonModeVBR_MP3.Checked;
+                labelVBRValue_MP3.Enabled = radioButtonModeVBR_MP3.Checked;
 
-                checkBoxParameter_q.Enabled = true;
-                trackBarParameter_q.Enabled = checkBoxParameter_q.Checked;
-                labelParameter_qValue.Enabled = checkBoxParameter_q.Checked;
+                checkBoxParameter_q_MP3.Enabled = true;
+                trackBarParameter_q_MP3.Enabled = checkBoxParameter_q_MP3.Checked;
+                labelParameter_qValue_MP3.Enabled = checkBoxParameter_q_MP3.Checked;
 
-                checkBoxChannelsModes.Enabled = true;
-                radioButtonJointStereo.Enabled = checkBoxChannelsModes.Checked;
-                radioButtonStereo.Enabled = checkBoxChannelsModes.Checked;
-                radioButtonMono.Enabled = checkBoxChannelsModes.Checked;
+                checkBoxChannelsModes_MP3.Enabled = true;
+                radioButtonJointStereo_MP3.Enabled = checkBoxChannelsModes_MP3.Checked;
+                radioButtonStereo_MP3.Enabled = checkBoxChannelsModes_MP3.Checked;
+                radioButtonMono_MP3.Enabled = checkBoxChannelsModes_MP3.Checked;
 
                 buttonSaveUserPreset1.Enabled = true;
                 buttonSaveUserPreset2.Enabled = true;
@@ -3150,21 +3150,21 @@ namespace Codec_Playground_H
             }
             else if (isUserPresetSelected)
             {
-                trackBarCBR.Enabled = false;
-                labelCBRValue.Enabled = false;
-                trackBarABR.Enabled = false;
-                labelABRValue.Enabled = false;
-                trackBarVBR.Enabled = false;
-                labelVBRValue.Enabled = false;
+                trackBarCBR_MP3.Enabled = false;
+                labelCBRValue_MP3.Enabled = false;
+                trackBarABR_MP3.Enabled = false;
+                labelABRValue_MP3.Enabled = false;
+                trackBarVBR_MP3.Enabled = false;
+                labelVBRValue_MP3.Enabled = false;
 
-                checkBoxParameter_q.Enabled = false;
-                trackBarParameter_q.Enabled = false;
-                labelParameter_qValue.Enabled = false;
+                checkBoxParameter_q_MP3.Enabled = false;
+                trackBarParameter_q_MP3.Enabled = false;
+                labelParameter_qValue_MP3.Enabled = false;
 
-                checkBoxChannelsModes.Enabled = false;
-                radioButtonJointStereo.Enabled = false;
-                radioButtonStereo.Enabled = false;
-                radioButtonMono.Enabled = false;
+                checkBoxChannelsModes_MP3.Enabled = false;
+                radioButtonJointStereo_MP3.Enabled = false;
+                radioButtonStereo_MP3.Enabled = false;
+                radioButtonMono_MP3.Enabled = false;
 
                 buttonSaveUserPreset1.Enabled = false;
                 buttonSaveUserPreset2.Enabled = false;
@@ -3182,54 +3182,54 @@ namespace Codec_Playground_H
 
         private void TrackBarCBR_Scroll(object? sender, EventArgs e)
         {
-            labelCBRValue.Text = CbrBitrates[trackBarCBR.Value].ToString();
-            Log($"📊 CBR trackbar: {labelCBRValue.Text}");
+            labelCBRValue_MP3.Text = CbrBitrates[trackBarCBR_MP3.Value].ToString();
+            Log($"📊 CBR trackbar: {labelCBRValue_MP3.Text}");
             OnSettingsChanged();
         }
 
         private void TrackBarVBR_Scroll(object? sender, EventArgs e)
         {
-            labelVBRValue.Text = $"V{Math.Abs(trackBarVBR.Value)}";
-            Log($"📊 VBR trackbar: {labelVBRValue.Text}");
+            labelVBRValue_MP3.Text = $"V{Math.Abs(trackBarVBR_MP3.Value)}";
+            Log($"📊 VBR trackbar: {labelVBRValue_MP3.Text}");
             OnSettingsChanged();
         }
 
         private void TrackBarABR_Scroll(object? sender, EventArgs e)
         {
-            labelABRValue.Text = AbrBitrates[trackBarABR.Value].ToString();
-            Log($"📊 ABR trackbar: {labelABRValue.Text}");
+            labelABRValue_MP3.Text = AbrBitrates[trackBarABR_MP3.Value].ToString();
+            Log($"📊 ABR trackbar: {labelABRValue_MP3.Text}");
             OnSettingsChanged();
         }
 
         private void CheckBoxQ_CheckedChanged(object? sender, EventArgs e)
         {
-            bool en = checkBoxParameter_q.Checked && !radioButton_Hidden_ModeMP3_OFF.Checked;
-            trackBarParameter_q.Enabled = en;
-            labelParameter_qValue.Enabled = en;
+            bool en = checkBoxParameter_q_MP3.Checked && !radioButton_Hidden_Mode_OFF_MP3.Checked;
+            trackBarParameter_q_MP3.Enabled = en;
+            labelParameter_qValue_MP3.Enabled = en;
             Log($"📊 Quality checkbox: {en}");
             OnSettingsChanged();
         }
 
         private void TrackBarQ_Scroll(object? sender, EventArgs e)
         {
-            labelParameter_qValue.Text = $"q{Math.Abs(trackBarParameter_q.Value)}";
-            Log($"📊 Quality trackbar: {labelParameter_qValue.Text}");
+            labelParameter_qValue_MP3.Text = $"q{Math.Abs(trackBarParameter_q_MP3.Value)}";
+            Log($"📊 Quality trackbar: {labelParameter_qValue_MP3.Text}");
             OnSettingsChanged();
         }
 
         private void CheckBoxChannelsMix_CheckedChanged(object? sender, EventArgs e)
         {
-            bool en = checkBoxChannelsModes.Checked && !radioButton_Hidden_ModeMP3_OFF.Checked;
-            radioButtonStereo.Enabled = en;
-            radioButtonJointStereo.Enabled = en;
-            radioButtonMono.Enabled = en;
+            bool en = checkBoxChannelsModes_MP3.Checked && !radioButton_Hidden_Mode_OFF_MP3.Checked;
+            radioButtonStereo_MP3.Enabled = en;
+            radioButtonJointStereo_MP3.Enabled = en;
+            radioButtonMono_MP3.Enabled = en;
             Log($"📊 Channel modes checkbox: {en}");
             OnSettingsChanged();
         }
 
         private void RadioButtonStereoMode_CheckedChanged(object? sender, EventArgs e)
         {
-            if (sender is RadioButton rb && rb.Checked && checkBoxChannelsModes.Checked)
+            if (sender is RadioButton rb && rb.Checked && checkBoxChannelsModes_MP3.Checked)
             {
                 Log($"📌 Stereo mode changed: {rb.Text}");
                 OnSettingsChanged();
@@ -3625,31 +3625,31 @@ namespace Codec_Playground_H
             string encoderFullName2 = $"{encoderName2}_{encoderVersion2}";
 
             string modeAndBitrate = "CBR_128";
-            if (radioButtonModeCBR.Checked)
+            if (radioButtonModeCBR_MP3.Checked)
             {
-                modeAndBitrate = $"CBR_{CbrBitrates[trackBarCBR.Value]}";
+                modeAndBitrate = $"CBR_{CbrBitrates[trackBarCBR_MP3.Value]}";
             }
-            else if (radioButtonModeABR.Checked)
+            else if (radioButtonModeABR_MP3.Checked)
             {
-                modeAndBitrate = $"ABR_{AbrBitrates[trackBarABR.Value]}";
+                modeAndBitrate = $"ABR_{AbrBitrates[trackBarABR_MP3.Value]}";
             }
-            else if (radioButtonModeVBR.Checked)
+            else if (radioButtonModeVBR_MP3.Checked)
             {
-                modeAndBitrate = $"VBR_V{Math.Abs(trackBarVBR.Value)}";
+                modeAndBitrate = $"VBR_V{Math.Abs(trackBarVBR_MP3.Value)}";
             }
 
             string quality = "";
-            if (checkBoxParameter_q.Checked)
+            if (checkBoxParameter_q_MP3.Checked)
             {
-                quality = $"_q{Math.Abs(trackBarParameter_q.Value)}";
+                quality = $"_q{Math.Abs(trackBarParameter_q_MP3.Value)}";
             }
 
             string channelMode = "";
-            if (checkBoxChannelsModes.Checked)
+            if (checkBoxChannelsModes_MP3.Checked)
             {
-                if (radioButtonJointStereo.Checked) channelMode = "_j";
-                else if (radioButtonStereo.Checked) channelMode = "_s";
-                else if (radioButtonMono.Checked) channelMode = "_m";
+                if (radioButtonJointStereo_MP3.Checked) channelMode = "_j";
+                else if (radioButtonStereo_MP3.Checked) channelMode = "_s";
+                else if (radioButtonMono_MP3.Checked) channelMode = "_m";
             }
 
             string readableName2 = $"{fileNameWithExt2}_{encoderFullName2}_{modeAndBitrate}{quality}{channelMode}";
@@ -3662,22 +3662,22 @@ namespace Codec_Playground_H
             StringBuilder settings2 = new();
             _ = settings2.Append($"{audioPath}|{encoderPath}|{encoderVersion2}|");
 
-            if (radioButtonModeCBR.Checked)
-                _ = settings2.Append($"CBR_{CbrBitrates[trackBarCBR.Value]}|");
-            else if (radioButtonModeABR.Checked)
-                _ = settings2.Append($"ABR_{AbrBitrates[trackBarABR.Value]}|");
-            else if (radioButtonModeVBR.Checked)
-                _ = settings2.Append($"VBR_{Math.Abs(trackBarVBR.Value)}|");
+            if (radioButtonModeCBR_MP3.Checked)
+                _ = settings2.Append($"CBR_{CbrBitrates[trackBarCBR_MP3.Value]}|");
+            else if (radioButtonModeABR_MP3.Checked)
+                _ = settings2.Append($"ABR_{AbrBitrates[trackBarABR_MP3.Value]}|");
+            else if (radioButtonModeVBR_MP3.Checked)
+                _ = settings2.Append($"VBR_{Math.Abs(trackBarVBR_MP3.Value)}|");
 
 
-            if (checkBoxParameter_q.Checked)
-                _ = settings2.Append($"q{Math.Abs(trackBarParameter_q.Value)}|");
+            if (checkBoxParameter_q_MP3.Checked)
+                _ = settings2.Append($"q{Math.Abs(trackBarParameter_q_MP3.Value)}|");
 
-            if (checkBoxChannelsModes.Checked)
+            if (checkBoxChannelsModes_MP3.Checked)
             {
-                if (radioButtonJointStereo.Checked) _ = settings2.Append("j|");
-                else if (radioButtonStereo.Checked) _ = settings2.Append("s|");
-                else if (radioButtonMono.Checked) _ = settings2.Append("m|");
+                if (radioButtonJointStereo_MP3.Checked) _ = settings2.Append("j|");
+                else if (radioButtonStereo_MP3.Checked) _ = settings2.Append("s|");
+                else if (radioButtonMono_MP3.Checked) _ = settings2.Append("m|");
             }
             else _ = settings2.Append("auto|");
 
