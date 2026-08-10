@@ -578,7 +578,7 @@ namespace Codec_Playground_H
             private int _origReadIdx;
             private int _bufferedSamplesOrig;
 
-            private readonly object _seekLock = new();
+            private readonly Lock _seekLock = new();
 
             public PlayMode CurrentMode { get; set; } = PlayMode.Original;
             public WaveFormat WaveFormat { get; }
@@ -788,24 +788,18 @@ namespace Codec_Playground_H
             }
         }
 
-        public class MemorySampleSource : ISampleProvider
+        public class MemorySampleSource(float[] data, WaveFormat format) : ISampleProvider
         {
-            private readonly float[] _data;
+            private readonly float[] _data = data;
             private long _position;
 
-            public WaveFormat WaveFormat { get; }
+            public WaveFormat WaveFormat { get; } = format;
             public long LengthSamples => _data.Length;
 
             public long PositionSamples
             {
                 get => _position;
                 set => _position = Math.Clamp(value, 0, _data.Length);
-            }
-
-            public MemorySampleSource(float[] data, WaveFormat format)
-            {
-                _data = data;
-                WaveFormat = format;
             }
 
             public int Read(float[] buffer, int offset, int count)
@@ -854,8 +848,8 @@ namespace Codec_Playground_H
             Log($"✅ Converted to mono: {monoOrig.Length} samples");
 
             int filterSize = 4;
-            if (bitrate > 0 && bitrate <= 56) filterSize = 16;
-            else if (bitrate > 0 && bitrate <= 64) filterSize = 4;
+            if (bitrate is > 0 and <= 56) filterSize = 16;
+            else if (bitrate is > 0 and <= 64) filterSize = 4;
             Log($"🔧 Initial filter size: {filterSize}");
 
             float highFreqRatio = 0;
@@ -1703,8 +1697,8 @@ namespace Codec_Playground_H
 
         private void ButtonClear_Click(object? sender, EventArgs e)
         {
-            Button? clickedButton = sender as Button;
-            if (clickedButton == null) return;
+            if (sender is not Button clickedButton) return;
+
             Log($"🗑️ Clear button clicked: {clickedButton.Name}");
             StopDualPlayback();
 
@@ -1759,7 +1753,7 @@ namespace Codec_Playground_H
                 return;
             }
 
-            Log($"🔄 Encoding new variant: {cacheKey.Substring(0, Math.Min(12, cacheKey.Length))}...");
+            Log($"🔄 Encoding new variant: {cacheKey[..Math.Min(12, cacheKey.Length)]}...");
             _encodingCts?.Cancel();
             _encodingCts?.Dispose();
             _encodingCts = new CancellationTokenSource();
@@ -2975,7 +2969,7 @@ namespace Codec_Playground_H
         private void TimerTrackBarSeek_Tick(object? sender, EventArgs e)
         {
             if (_isDraggingTrackBarSeek || _waveOut == null) return;
-            if (_waveOut.PlaybackState == PlaybackState.Playing || _waveOut.PlaybackState == PlaybackState.Paused)
+            if (_waveOut.PlaybackState is PlaybackState.Playing or PlaybackState.Paused)
             {
                 try
                 {
@@ -3021,8 +3015,7 @@ namespace Codec_Playground_H
         {
             Log($"🖱️ Seek mouse down at position: {e.X}");
 
-            TrackBar? trackBar = sender as TrackBar;
-            if (trackBar == null) return;
+            if (sender is not TrackBar trackBar) return;
 
             double thumbPosition = (double)(trackBar.Value - trackBar.Minimum) / (trackBar.Maximum - trackBar.Minimum);
             int thumbX = (int)(thumbPosition * (trackBar.Width - 4));
@@ -3432,7 +3425,7 @@ namespace Codec_Playground_H
         private void ButtonStop_Click(object? sender, EventArgs e)
         {
             Log($"⏹️ Stop clicked");
-            if (_encodingStatus == EncodingStatus.Running || _encodingStatus == EncodingStatus.Queued)
+            if (_encodingStatus is EncodingStatus.Running or EncodingStatus.Queued)
             {
                 Log($"⏹️ Canceling encoding");
                 _encodingCts?.Cancel();
@@ -3785,7 +3778,7 @@ namespace Codec_Playground_H
 
             if (readableName2.Length > 130)
             {
-                readableName2 = readableName2.Substring(0, 130);
+                readableName2 = readableName2[..130];
             }
 
             StringBuilder settings2 = new();
