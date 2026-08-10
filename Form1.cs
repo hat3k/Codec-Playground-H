@@ -781,26 +781,26 @@ namespace Codec_Playground_H
                 _settings.EncoderSettings.MixBalanceValue = trackBarMixBalance.Value;
                 _settings.CheckForUpdates = checkBoxCheckForUpdates.Checked;
 
-                _settings.EncoderSettings.ModeCBR = radioButtonModeCBR_MP3.Checked;
-                _settings.EncoderSettings.ModeABR = radioButtonModeABR_MP3.Checked;
-                _settings.EncoderSettings.ModeVBR = radioButtonModeVBR_MP3.Checked;
+                _settings.EncoderSettings.ModeCBR_MP3 = radioButtonModeCBR_MP3.Checked;
+                _settings.EncoderSettings.ModeABR_MP3 = radioButtonModeABR_MP3.Checked;
+                _settings.EncoderSettings.ModeVBR_MP3 = radioButtonModeVBR_MP3.Checked;
 
-                _settings.EncoderSettings.CbrValue = trackBarCBR_MP3.Value;
-                _settings.EncoderSettings.AbrValue = trackBarABR_MP3.Value;
-                _settings.EncoderSettings.VbrValue = trackBarVBR_MP3.Value;
-                _settings.EncoderSettings.QualityValue = trackBarParameter_q_MP3.Value;
+                _settings.EncoderSettings.CBRValue_MP3 = trackBarCBR_MP3.Value;
+                _settings.EncoderSettings.ABRValue_MP3 = trackBarABR_MP3.Value;
+                _settings.EncoderSettings.VBRValue_MP3 = trackBarVBR_MP3.Value;
+                _settings.EncoderSettings.QualityValue_MP3 = trackBarParameter_q_MP3.Value;
 
-                _settings.EncoderSettings.UseQuality = checkBoxParameter_q_MP3.Checked;
-                _settings.EncoderSettings.UseChannelModes = checkBoxChannelsModes_MP3.Checked;
+                _settings.EncoderSettings.UseQuality_MP3 = checkBoxParameter_q_MP3.Checked;
+                _settings.EncoderSettings.UseChannelModes_MP3 = checkBoxChannelsModes_MP3.Checked;
 
-                _settings.EncoderSettings.ChannelJointStereo = radioButtonJointStereo_MP3.Checked;
-                _settings.EncoderSettings.ChannelStereo = radioButtonStereo_MP3.Checked;
-                _settings.EncoderSettings.ChannelMono = radioButtonMono_MP3.Checked;
+                _settings.EncoderSettings.ChannelJointStereo_MP3 = radioButtonJointStereo_MP3.Checked;
+                _settings.EncoderSettings.ChannelStereo_MP3 = radioButtonStereo_MP3.Checked;
+                _settings.EncoderSettings.ChannelMono_MP3 = radioButtonMono_MP3.Checked;
 
-                _settings.EncoderSettings.LabelCBR = labelCBRValue_MP3.Text;
-                _settings.EncoderSettings.LabelABR = labelABRValue_MP3.Text;
-                _settings.EncoderSettings.LabelVBR = labelVBRValue_MP3.Text;
-                _settings.EncoderSettings.LabelQuality = labelParameter_qValue_MP3.Text;
+                _settings.EncoderSettings.LabelCBR_MP3 = labelCBRValue_MP3.Text;
+                _settings.EncoderSettings.LabelABR_MP3 = labelABRValue_MP3.Text;
+                _settings.EncoderSettings.LabelVBR_MP3 = labelVBRValue_MP3.Text;
+                _settings.EncoderSettings.LabelQuality_MP3 = labelParameter_qValue_MP3.Text;
 
                 _settings.UserPresets.UserPreset1 = radioButtonUserPreset1.Checked;
                 _settings.UserPresets.UserPreset1Name = radioButtonUserPreset1.Text;
@@ -1078,26 +1078,26 @@ namespace Codec_Playground_H
                     labelMixBalance.Text = $"{origPct} / {encPct}";
                 }
 
-                radioButtonModeCBR_MP3.Checked = _settings.EncoderSettings.ModeCBR;
-                radioButtonModeABR_MP3.Checked = _settings.EncoderSettings.ModeABR;
-                radioButtonModeVBR_MP3.Checked = _settings.EncoderSettings.ModeVBR;
+                radioButtonModeCBR_MP3.Checked = _settings.EncoderSettings.ModeCBR_MP3;
+                radioButtonModeABR_MP3.Checked = _settings.EncoderSettings.ModeABR_MP3;
+                radioButtonModeVBR_MP3.Checked = _settings.EncoderSettings.ModeVBR_MP3;
 
-                trackBarCBR_MP3.Value = _settings.EncoderSettings.CbrValue;
-                trackBarABR_MP3.Value = _settings.EncoderSettings.AbrValue;
-                trackBarVBR_MP3.Value = _settings.EncoderSettings.VbrValue;
-                trackBarParameter_q_MP3.Value = _settings.EncoderSettings.QualityValue;
+                trackBarCBR_MP3.Value = _settings.EncoderSettings.CBRValue_MP3;
+                trackBarABR_MP3.Value = _settings.EncoderSettings.ABRValue_MP3;
+                trackBarVBR_MP3.Value = _settings.EncoderSettings.VBRValue_MP3;
+                trackBarParameter_q_MP3.Value = _settings.EncoderSettings.QualityValue_MP3;
 
-                checkBoxParameter_q_MP3.Checked = _settings.EncoderSettings.UseQuality;
-                checkBoxChannelsModes_MP3.Checked = _settings.EncoderSettings.UseChannelModes;
+                checkBoxParameter_q_MP3.Checked = _settings.EncoderSettings.UseQuality_MP3;
+                checkBoxChannelsModes_MP3.Checked = _settings.EncoderSettings.UseChannelModes_MP3;
 
-                radioButtonJointStereo_MP3.Checked = _settings.EncoderSettings.ChannelJointStereo;
-                radioButtonStereo_MP3.Checked = _settings.EncoderSettings.ChannelStereo;
-                radioButtonMono_MP3.Checked = _settings.EncoderSettings.ChannelMono;
+                radioButtonJointStereo_MP3.Checked = _settings.EncoderSettings.ChannelJointStereo_MP3;
+                radioButtonStereo_MP3.Checked = _settings.EncoderSettings.ChannelStereo_MP3;
+                radioButtonMono_MP3.Checked = _settings.EncoderSettings.ChannelMono_MP3;
 
-                labelCBRValue_MP3.Text = _settings.EncoderSettings.LabelCBR;
-                labelABRValue_MP3.Text = _settings.EncoderSettings.LabelABR;
-                labelVBRValue_MP3.Text = _settings.EncoderSettings.LabelVBR;
-                labelParameter_qValue_MP3.Text = _settings.EncoderSettings.LabelQuality;
+                labelCBRValue_MP3.Text = _settings.EncoderSettings.LabelCBR_MP3;
+                labelABRValue_MP3.Text = _settings.EncoderSettings.LabelABR_MP3;
+                labelVBRValue_MP3.Text = _settings.EncoderSettings.LabelVBR_MP3;
+                labelParameter_qValue_MP3.Text = _settings.EncoderSettings.LabelQuality_MP3;
 
                 MinimumSize = new Size(874, 515);
 
@@ -4045,7 +4045,7 @@ namespace Codec_Playground_H
             public UserPreset UserPresets { get; set; } = new();
             public bool HiddenModeMP3Off { get; set; } = false;
             public bool HiddenUserPresetOff { get; set; } = true;
-            public bool CheckForUpdates { get; set; } = true;
+            public bool CheckForUpdates { get; set; } = false;
         }
 
         public class ListViewSettings
@@ -4055,22 +4055,25 @@ namespace Codec_Playground_H
 
         public class EncoderSettings
         {
-            public bool ModeCBR { get; set; } = true;
-            public bool ModeABR { get; set; } = false;
-            public bool ModeVBR { get; set; } = false;
-            public int CbrValue { get; set; } = 16;
-            public int AbrValue { get; set; } = 16;
-            public int VbrValue { get; set; } = 0;
-            public int QualityValue { get; set; } = 0;
-            public bool UseQuality { get; set; } = false;
-            public bool UseChannelModes { get; set; } = false;
-            public bool ChannelJointStereo { get; set; } = true;
-            public bool ChannelStereo { get; set; } = false;
-            public bool ChannelMono { get; set; } = false;
-            public string LabelCBR { get; set; } = "320";
-            public string LabelABR { get; set; } = "320";
-            public string LabelVBR { get; set; } = "V0";
-            public string LabelQuality { get; set; } = "q0";
+            // MP3 settings
+            public bool ModeCBR_MP3 { get; set; } = true;
+            public bool ModeABR_MP3 { get; set; } = false;
+            public bool ModeVBR_MP3 { get; set; } = false;
+            public int CBRValue_MP3 { get; set; } = 16;
+            public int ABRValue_MP3 { get; set; } = 16;
+            public int VBRValue_MP3 { get; set; } = 0;
+            public bool UseQuality_MP3 { get; set; } = false;
+            public int QualityValue_MP3 { get; set; } = 0;
+            public bool UseChannelModes_MP3 { get; set; } = false;
+            public bool ChannelJointStereo_MP3 { get; set; } = true;
+            public bool ChannelStereo_MP3 { get; set; } = false;
+            public bool ChannelMono_MP3 { get; set; } = false;
+            public string LabelCBR_MP3 { get; set; } = "320";
+            public string LabelABR_MP3 { get; set; } = "320";
+            public string LabelVBR_MP3 { get; set; } = "V0";
+            public string LabelQuality_MP3 { get; set; } = "q0";
+            
+            // Balance of Mix mode
             public int MixBalanceValue { get; set; } = 50;
         }
 
