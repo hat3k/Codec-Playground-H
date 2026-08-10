@@ -784,12 +784,10 @@ namespace Codec_Playground_H
                 _settings.EncoderSettings.ModeCBR = radioButtonModeCBR.Checked;
                 _settings.EncoderSettings.ModeABR = radioButtonModeABR.Checked;
                 _settings.EncoderSettings.ModeVBR = radioButtonModeVBR.Checked;
-                _settings.EncoderSettings.ModeVBR41 = radioButtonModeVBR_4_1.Checked;
 
                 _settings.EncoderSettings.CbrValue = trackBarCBR.Value;
                 _settings.EncoderSettings.AbrValue = trackBarABR.Value;
                 _settings.EncoderSettings.VbrValue = trackBarVBR.Value;
-                _settings.EncoderSettings.Vbr41Value = trackBarVBR_4_1.Value;
                 _settings.EncoderSettings.QualityValue = trackBarParameter_q.Value;
 
                 _settings.EncoderSettings.UseQuality = checkBoxParameter_q.Checked;
@@ -802,7 +800,6 @@ namespace Codec_Playground_H
                 _settings.EncoderSettings.LabelCBR = labelCBRValue.Text;
                 _settings.EncoderSettings.LabelABR = labelABRValue.Text;
                 _settings.EncoderSettings.LabelVBR = labelVBRValue.Text;
-                _settings.EncoderSettings.LabelVBR41 = labelVBRValue_4_1.Text;
                 _settings.EncoderSettings.LabelQuality = labelParameter_qValue.Text;
 
                 _settings.UserPresets.UserPreset1 = radioButtonUserPreset1.Checked;
@@ -914,13 +911,12 @@ namespace Codec_Playground_H
                         Log($"⚠️ Encoder file not found: {encoderPath}");
                         continue;
                     }
-                    (string? name, string? family, string? version) = GetEncoderInfo(encoderPath);
+                    (string? name, string? version) = GetEncoderInfo(encoderPath);
                     ListViewItem item = new(name) { Tag = encoderPath, Checked = false };
-                    _ = item.SubItems.Add(family);
                     _ = item.SubItems.Add(version);
                     _ = item.SubItems.Add(Path.GetDirectoryName(encoderPath) ?? string.Empty);
                     _ = listViewEncoders.Items.Add(item);
-                    Log($"✅ Added encoder: {name} ({family}) version {version}");
+                    Log($"✅ Added encoder: {name} version {version}");
                 }
 
                 if (_settings.EncoderListView.ColumnWidths.Count == listViewEncoders.Columns.Count)
@@ -1085,12 +1081,10 @@ namespace Codec_Playground_H
                 radioButtonModeCBR.Checked = _settings.EncoderSettings.ModeCBR;
                 radioButtonModeABR.Checked = _settings.EncoderSettings.ModeABR;
                 radioButtonModeVBR.Checked = _settings.EncoderSettings.ModeVBR;
-                radioButtonModeVBR_4_1.Checked = _settings.EncoderSettings.ModeVBR41;
 
                 trackBarCBR.Value = _settings.EncoderSettings.CbrValue;
                 trackBarABR.Value = _settings.EncoderSettings.AbrValue;
                 trackBarVBR.Value = _settings.EncoderSettings.VbrValue;
-                trackBarVBR_4_1.Value = _settings.EncoderSettings.Vbr41Value;
                 trackBarParameter_q.Value = _settings.EncoderSettings.QualityValue;
 
                 checkBoxParameter_q.Checked = _settings.EncoderSettings.UseQuality;
@@ -1103,7 +1097,6 @@ namespace Codec_Playground_H
                 labelCBRValue.Text = _settings.EncoderSettings.LabelCBR;
                 labelABRValue.Text = _settings.EncoderSettings.LabelABR;
                 labelVBRValue.Text = _settings.EncoderSettings.LabelVBR;
-                labelVBRValue_4_1.Text = _settings.EncoderSettings.LabelVBR41;
                 labelParameter_qValue.Text = _settings.EncoderSettings.LabelQuality;
 
                 MinimumSize = new Size(874, 515);
@@ -1226,10 +1219,9 @@ namespace Codec_Playground_H
                 return;
             }
 
-            (string? name, string? family, string? version) = GetEncoderInfo(encoderPath);
-            Log($"📊 Encoder info: name={name}, family={family}, version={version}");
+            (string? name, string? version) = GetEncoderInfo(encoderPath);
+            Log($"📊 Encoder info: name={name}, version={version}");
             ListViewItem item = new(name) { Tag = encoderPath, Checked = false };
-            _ = item.SubItems.Add(family);
             _ = item.SubItems.Add(version);
             _ = item.SubItems.Add(Path.GetDirectoryName(encoderPath) ?? string.Empty);
             _ = listViewEncoders.Items.Add(item);
@@ -1286,13 +1278,12 @@ namespace Codec_Playground_H
             }
         }
 
-        private (string Name, string Family, string Version) GetEncoderInfo(string encoderPath)
+        private (string Name, string Version) GetEncoderInfo(string encoderPath)
         {
             Log($"🔍 GetEncoderInfo for: {encoderPath}");
             try
             {
                 string name = Path.GetFileName(encoderPath);
-                string family = string.Empty;
                 string version = "Unknown";
 
                 try
@@ -1325,12 +1316,10 @@ namespace Codec_Playground_H
                         version = lines[0].Trim();
                         if (version.Contains("LAME", StringComparison.OrdinalIgnoreCase))
                         {
-                            family = "MP3";
                             Log($"✅ Detected LAME MP3 encoder: {version}");
                         }
                         else if (version.Contains("Ogg", StringComparison.OrdinalIgnoreCase))
                         {
-                            family = "Ogg";
                             Log($"✅ Detected Ogg encoder: {version}");
                         }
                         else
@@ -1348,7 +1337,6 @@ namespace Codec_Playground_H
                         version = versionInfo.FileVersion ?? "Unknown";
                         if (!string.IsNullOrEmpty(versionInfo.FileDescription) && versionInfo.FileDescription.Contains("LAME", StringComparison.OrdinalIgnoreCase))
                         {
-                            family = "MP3";
                             Log($"✅ Detected LAME MP3 encoder via FileVersionInfo");
                         }
                     }
@@ -1357,13 +1345,13 @@ namespace Codec_Playground_H
                         Log($"⚠️ FileVersionInfo failed: {ex2.Message}");
                     }
                 }
-                Log($"📊 Result: name={name}, family={family}, version={version}");
-                return (name, family, version);
+                Log($"📊 Result: name={name}, version={version}");
+                return (name, version);
             }
             catch (Exception ex)
             {
                 Log($"❌ GetEncoderInfo failed: {ex.Message}");
-                return (Path.GetFileName(encoderPath), "Unknown", "Unknown");
+                return (Path.GetFileName(encoderPath), "Unknown");
             }
         }
 
@@ -2097,11 +2085,6 @@ namespace Codec_Playground_H
                 mode = "VBR";
                 vbrValue = Math.Abs(trackBarVBR.Value);
             }
-            else if (radioButtonModeVBR_4_1.Checked)
-            {
-                mode = "VBR41";
-                vbrValue = Math.Abs(trackBarVBR_4_1.Value);
-            }
 
             useQ = checkBoxParameter_q.Checked;
             if (useQ) qValue = Math.Abs(trackBarParameter_q.Value);
@@ -2123,7 +2106,6 @@ namespace Codec_Playground_H
                     case "CBR": _ = args.Append($"-b {bitrate} "); break;
                     case "ABR": _ = args.Append($"--abr {bitrate} "); break;
                     case "VBR": _ = args.Append($"-V {vbrValue} "); break;
-                    case "VBR41": _ = args.Append($"-V {vbrValue} "); break;
                 }
             }
 
@@ -3102,7 +3084,7 @@ namespace Codec_Playground_H
                 return;
 
             bool isMP3SettingsModeButton = radio == radioButtonModeCBR || radio == radioButtonModeABR ||
-                                           radio == radioButtonModeVBR || radio == radioButtonModeVBR_4_1;
+                                           radio == radioButtonModeVBR;
 
             bool isUserPresetButton = radio == radioButtonUserPreset1 || radio == radioButtonUserPreset2 ||
                                       radio == radioButtonUserPreset3 || radio == radioButtonUserPreset4 ||
@@ -3124,7 +3106,6 @@ namespace Codec_Playground_H
                 radioButtonModeCBR.Checked = false;
                 radioButtonModeABR.Checked = false;
                 radioButtonModeVBR.Checked = false;
-                radioButtonModeVBR_4_1.Checked = false;
                 radioButton_Hidden_ModeMP3_OFF.Checked = true;
                 radioButton_Hidden_UserPreset_OFF.Checked = false;
             }
@@ -3134,7 +3115,7 @@ namespace Codec_Playground_H
             }
 
             bool isMP3SettingsSelected = radioButtonModeCBR.Checked || radioButtonModeABR.Checked ||
-                                         radioButtonModeVBR.Checked || radioButtonModeVBR_4_1.Checked;
+                                         radioButtonModeVBR.Checked;
 
             bool isUserPresetSelected = radioButtonUserPreset1.Checked || radioButtonUserPreset2.Checked ||
                                         radioButtonUserPreset3.Checked || radioButtonUserPreset4.Checked ||
@@ -3148,8 +3129,6 @@ namespace Codec_Playground_H
                 labelABRValue.Enabled = radioButtonModeABR.Checked;
                 trackBarVBR.Enabled = radioButtonModeVBR.Checked;
                 labelVBRValue.Enabled = radioButtonModeVBR.Checked;
-                trackBarVBR_4_1.Enabled = radioButtonModeVBR_4_1.Checked;
-                labelVBRValue_4_1.Enabled = radioButtonModeVBR_4_1.Checked;
 
                 checkBoxParameter_q.Enabled = true;
                 trackBarParameter_q.Enabled = checkBoxParameter_q.Checked;
@@ -3177,8 +3156,6 @@ namespace Codec_Playground_H
                 labelABRValue.Enabled = false;
                 trackBarVBR.Enabled = false;
                 labelVBRValue.Enabled = false;
-                trackBarVBR_4_1.Enabled = false;
-                labelVBRValue_4_1.Enabled = false;
 
                 checkBoxParameter_q.Enabled = false;
                 trackBarParameter_q.Enabled = false;
@@ -3214,13 +3191,6 @@ namespace Codec_Playground_H
         {
             labelVBRValue.Text = $"V{Math.Abs(trackBarVBR.Value)}";
             Log($"📊 VBR trackbar: {labelVBRValue.Text}");
-            OnSettingsChanged();
-        }
-
-        private void TrackBarVBR_4_1_Scroll(object? sender, EventArgs e)
-        {
-            labelVBRValue_4_1.Text = $"V{Math.Abs(trackBarVBR_4_1.Value)}";
-            Log($"📊 VBR4.1 trackbar: {labelVBRValue_4_1.Text}");
             OnSettingsChanged();
         }
 
@@ -3667,10 +3637,6 @@ namespace Codec_Playground_H
             {
                 modeAndBitrate = $"VBR_V{Math.Abs(trackBarVBR.Value)}";
             }
-            else if (radioButtonModeVBR_4_1.Checked)
-            {
-                modeAndBitrate = $"VBR41_V{Math.Abs(trackBarVBR_4_1.Value)}";
-            }
 
             string quality = "";
             if (checkBoxParameter_q.Checked)
@@ -3702,8 +3668,7 @@ namespace Codec_Playground_H
                 _ = settings2.Append($"ABR_{AbrBitrates[trackBarABR.Value]}|");
             else if (radioButtonModeVBR.Checked)
                 _ = settings2.Append($"VBR_{Math.Abs(trackBarVBR.Value)}|");
-            else if (radioButtonModeVBR_4_1.Checked)
-                _ = settings2.Append($"VBR41_{Math.Abs(trackBarVBR_4_1.Value)}|");
+
 
             if (checkBoxParameter_q.Checked)
                 _ = settings2.Append($"q{Math.Abs(trackBarParameter_q.Value)}|");
@@ -4093,11 +4058,9 @@ namespace Codec_Playground_H
             public bool ModeCBR { get; set; } = true;
             public bool ModeABR { get; set; } = false;
             public bool ModeVBR { get; set; } = false;
-            public bool ModeVBR41 { get; set; } = false;
             public int CbrValue { get; set; } = 16;
             public int AbrValue { get; set; } = 16;
             public int VbrValue { get; set; } = 0;
-            public int Vbr41Value { get; set; } = 0;
             public int QualityValue { get; set; } = 0;
             public bool UseQuality { get; set; } = false;
             public bool UseChannelModes { get; set; } = false;
@@ -4107,7 +4070,6 @@ namespace Codec_Playground_H
             public string LabelCBR { get; set; } = "320";
             public string LabelABR { get; set; } = "320";
             public string LabelVBR { get; set; } = "V0";
-            public string LabelVBR41 { get; set; } = "V0";
             public string LabelQuality { get; set; } = "q0";
             public int MixBalanceValue { get; set; } = 50;
         }

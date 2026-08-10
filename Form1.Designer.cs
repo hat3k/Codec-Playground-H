@@ -33,7 +33,6 @@
             groupBoxEncoders = new GroupBox();
             listViewEncoders = new ListView();
             columnHeaderEncodersName = new ColumnHeader();
-            columnHeaderEncodersFamily = new ColumnHeader();
             columnHeaderEncodersVersion = new ColumnHeader();
             columnHeaderEncodersDirectory = new ColumnHeader();
             splitContainerEncodersAndAudioFlies = new SplitContainer();
@@ -50,15 +49,12 @@
             radioButtonModeCBR = new RadioButton();
             radioButtonModeABR = new RadioButton();
             radioButtonModeVBR = new RadioButton();
-            radioButtonModeVBR_4_1 = new RadioButton();
-            trackBarVBR_4_1 = new TrackBar();
             trackBarVBR = new TrackBar();
             trackBarABR = new TrackBar();
             trackBarCBR = new TrackBar();
             labelCBRValue = new Label();
             labelABRValue = new Label();
             labelVBRValue = new Label();
-            labelVBRValue_4_1 = new Label();
             panelAdditionalOptions_1 = new Panel();
             checkBoxParameter_q = new CheckBox();
             labelParameter_qValue = new Label();
@@ -120,7 +116,6 @@
             splitContainerEncodersAndAudioFlies.SuspendLayout();
             groupBoxAudioFiles.SuspendLayout();
             groupBoxEncoderSettings.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarVBR_4_1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarVBR).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarABR).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarCBR).BeginInit();
@@ -149,7 +144,7 @@
             // 
             listViewEncoders.AllowDrop = true;
             listViewEncoders.CheckBoxes = true;
-            listViewEncoders.Columns.AddRange(new ColumnHeader[] { columnHeaderEncodersName, columnHeaderEncodersFamily, columnHeaderEncodersVersion, columnHeaderEncodersDirectory });
+            listViewEncoders.Columns.AddRange(new ColumnHeader[] { columnHeaderEncodersName, columnHeaderEncodersVersion, columnHeaderEncodersDirectory });
             listViewEncoders.Dock = DockStyle.Fill;
             listViewEncoders.FullRowSelect = true;
             listViewEncoders.Location = new Point(3, 19);
@@ -167,11 +162,6 @@
             // 
             columnHeaderEncodersName.Text = "Name";
             columnHeaderEncodersName.Width = 120;
-            // 
-            // columnHeaderEncodersFamily
-            // 
-            columnHeaderEncodersFamily.Text = "Family";
-            columnHeaderEncodersFamily.Width = 0;
             // 
             // columnHeaderEncodersVersion
             // 
@@ -264,15 +254,12 @@
             groupBoxEncoderSettings.Controls.Add(radioButtonModeCBR);
             groupBoxEncoderSettings.Controls.Add(radioButtonModeABR);
             groupBoxEncoderSettings.Controls.Add(radioButtonModeVBR);
-            groupBoxEncoderSettings.Controls.Add(radioButtonModeVBR_4_1);
-            groupBoxEncoderSettings.Controls.Add(trackBarVBR_4_1);
             groupBoxEncoderSettings.Controls.Add(trackBarVBR);
             groupBoxEncoderSettings.Controls.Add(trackBarABR);
             groupBoxEncoderSettings.Controls.Add(trackBarCBR);
             groupBoxEncoderSettings.Controls.Add(labelCBRValue);
             groupBoxEncoderSettings.Controls.Add(labelABRValue);
             groupBoxEncoderSettings.Controls.Add(labelVBRValue);
-            groupBoxEncoderSettings.Controls.Add(labelVBRValue_4_1);
             groupBoxEncoderSettings.Controls.Add(panelAdditionalOptions_1);
             groupBoxEncoderSettings.Location = new Point(3, 3);
             groupBoxEncoderSettings.Name = "groupBoxEncoderSettings";
@@ -284,7 +271,7 @@
             // radioButton_Hidden_ModeMP3_OFF
             // 
             radioButton_Hidden_ModeMP3_OFF.AutoSize = true;
-            radioButton_Hidden_ModeMP3_OFF.Location = new Point(6, 137);
+            radioButton_Hidden_ModeMP3_OFF.Location = new Point(6, 111);
             radioButton_Hidden_ModeMP3_OFF.Name = "radioButton_Hidden_ModeMP3_OFF";
             radioButton_Hidden_ModeMP3_OFF.Size = new Size(14, 13);
             radioButton_Hidden_ModeMP3_OFF.TabIndex = 11;
@@ -324,33 +311,9 @@
             radioButtonModeVBR.Size = new Size(46, 19);
             radioButtonModeVBR.TabIndex = 0;
             radioButtonModeVBR.Text = "VBR";
+            toolTip1.SetToolTip(radioButtonModeVBR, "Note!\r\n\r\nV10...V14 may be compatible with LAME v4.1");
             radioButtonModeVBR.UseVisualStyleBackColor = true;
             radioButtonModeVBR.CheckedChanged += RadioButtonMode_CheckedChanged;
-            // 
-            // radioButtonModeVBR_4_1
-            // 
-            radioButtonModeVBR_4_1.AutoSize = true;
-            radioButtonModeVBR_4_1.Location = new Point(6, 118);
-            radioButtonModeVBR_4_1.Name = "radioButtonModeVBR_4_1";
-            radioButtonModeVBR_4_1.Size = new Size(70, 19);
-            radioButtonModeVBR_4_1.TabIndex = 0;
-            radioButtonModeVBR_4_1.Text = "VBR v4.1";
-            toolTip1.SetToolTip(radioButtonModeVBR_4_1, "WARNING!\r\n\r\nThis option is only compatible with LAME v4.1");
-            radioButtonModeVBR_4_1.UseVisualStyleBackColor = true;
-            radioButtonModeVBR_4_1.CheckedChanged += RadioButtonMode_CheckedChanged;
-            // 
-            // trackBarVBR_4_1
-            // 
-            trackBarVBR_4_1.Enabled = false;
-            trackBarVBR_4_1.LargeChange = 1;
-            trackBarVBR_4_1.Location = new Point(82, 118);
-            trackBarVBR_4_1.Maximum = 0;
-            trackBarVBR_4_1.Minimum = -14;
-            trackBarVBR_4_1.Name = "trackBarVBR_4_1";
-            trackBarVBR_4_1.Size = new Size(274, 45);
-            trackBarVBR_4_1.TabIndex = 7;
-            trackBarVBR_4_1.TickStyle = TickStyle.TopLeft;
-            trackBarVBR_4_1.Scroll += TrackBarVBR_4_1_Scroll;
             // 
             // trackBarVBR
             // 
@@ -358,7 +321,7 @@
             trackBarVBR.LargeChange = 1;
             trackBarVBR.Location = new Point(82, 86);
             trackBarVBR.Maximum = 0;
-            trackBarVBR.Minimum = -9;
+            trackBarVBR.Minimum = -14;
             trackBarVBR.Name = "trackBarVBR";
             trackBarVBR.Size = new Size(274, 45);
             trackBarVBR.TabIndex = 5;
@@ -425,18 +388,6 @@
             labelVBRValue.Text = "V0";
             labelVBRValue.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // labelVBRValue_4_1
-            // 
-            labelVBRValue_4_1.AutoSize = true;
-            labelVBRValue_4_1.Enabled = false;
-            labelVBRValue_4_1.Location = new Point(362, 120);
-            labelVBRValue_4_1.MinimumSize = new Size(24, 0);
-            labelVBRValue_4_1.Name = "labelVBRValue_4_1";
-            labelVBRValue_4_1.Size = new Size(24, 15);
-            labelVBRValue_4_1.TabIndex = 8;
-            labelVBRValue_4_1.Text = "V0";
-            labelVBRValue_4_1.TextAlign = ContentAlignment.MiddleCenter;
-            // 
             // panelAdditionalOptions_1
             // 
             panelAdditionalOptions_1.Controls.Add(checkBoxParameter_q);
@@ -446,10 +397,10 @@
             panelAdditionalOptions_1.Controls.Add(radioButtonStereo);
             panelAdditionalOptions_1.Controls.Add(radioButtonMono);
             panelAdditionalOptions_1.Controls.Add(trackBarParameter_q);
-            panelAdditionalOptions_1.Location = new Point(3, 167);
+            panelAdditionalOptions_1.Location = new Point(3, 148);
             panelAdditionalOptions_1.Margin = new Padding(0);
             panelAdditionalOptions_1.Name = "panelAdditionalOptions_1";
-            panelAdditionalOptions_1.Size = new Size(400, 59);
+            panelAdditionalOptions_1.Size = new Size(400, 56);
             panelAdditionalOptions_1.TabIndex = 10;
             // 
             // checkBoxParameter_q
@@ -479,7 +430,7 @@
             // checkBoxChannelsModes
             // 
             checkBoxChannelsModes.AutoSize = true;
-            checkBoxChannelsModes.Location = new Point(3, 39);
+            checkBoxChannelsModes.Location = new Point(3, 35);
             checkBoxChannelsModes.Name = "checkBoxChannelsModes";
             checkBoxChannelsModes.Size = new Size(109, 19);
             checkBoxChannelsModes.TabIndex = 3;
@@ -493,7 +444,7 @@
             radioButtonJointStereo.AutoSize = true;
             radioButtonJointStereo.Checked = true;
             radioButtonJointStereo.Enabled = false;
-            radioButtonJointStereo.Location = new Point(118, 38);
+            radioButtonJointStereo.Location = new Point(118, 34);
             radioButtonJointStereo.Name = "radioButtonJointStereo";
             radioButtonJointStereo.Size = new Size(40, 19);
             radioButtonJointStereo.TabIndex = 4;
@@ -507,7 +458,7 @@
             // 
             radioButtonStereo.AutoSize = true;
             radioButtonStereo.Enabled = false;
-            radioButtonStereo.Location = new Point(164, 38);
+            radioButtonStereo.Location = new Point(164, 34);
             radioButtonStereo.Name = "radioButtonStereo";
             radioButtonStereo.Size = new Size(58, 19);
             radioButtonStereo.TabIndex = 5;
@@ -520,7 +471,7 @@
             // 
             radioButtonMono.AutoSize = true;
             radioButtonMono.Enabled = false;
-            radioButtonMono.Location = new Point(228, 38);
+            radioButtonMono.Location = new Point(228, 34);
             radioButtonMono.Name = "radioButtonMono";
             radioButtonMono.Size = new Size(57, 19);
             radioButtonMono.TabIndex = 6;
@@ -557,7 +508,7 @@
             // buttonSaveUserPreset5
             // 
             buttonSaveUserPreset5.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            buttonSaveUserPreset5.Location = new Point(6, 149);
+            buttonSaveUserPreset5.Location = new Point(6, 148);
             buttonSaveUserPreset5.Name = "buttonSaveUserPreset5";
             buttonSaveUserPreset5.Size = new Size(24, 24);
             buttonSaveUserPreset5.TabIndex = 12;
@@ -569,7 +520,7 @@
             // buttonSaveUserPreset4
             // 
             buttonSaveUserPreset4.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            buttonSaveUserPreset4.Location = new Point(6, 117);
+            buttonSaveUserPreset4.Location = new Point(6, 116);
             buttonSaveUserPreset4.Name = "buttonSaveUserPreset4";
             buttonSaveUserPreset4.Size = new Size(24, 24);
             buttonSaveUserPreset4.TabIndex = 12;
@@ -605,7 +556,7 @@
             // buttonSaveUserPreset1
             // 
             buttonSaveUserPreset1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            buttonSaveUserPreset1.Location = new Point(6, 19);
+            buttonSaveUserPreset1.Location = new Point(6, 20);
             buttonSaveUserPreset1.Name = "buttonSaveUserPreset1";
             buttonSaveUserPreset1.Size = new Size(24, 24);
             buttonSaveUserPreset1.TabIndex = 12;
@@ -1094,7 +1045,6 @@
             groupBoxAudioFiles.ResumeLayout(false);
             groupBoxEncoderSettings.ResumeLayout(false);
             groupBoxEncoderSettings.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarVBR_4_1).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarVBR).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarABR).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarCBR).EndInit();
@@ -1143,14 +1093,10 @@
         private ColumnHeader columnHeaderAudioFilesBitDepth;
         private ColumnHeader columnHeaderAudioFilesSamplingRate;
         private ColumnHeader columnHeaderEncodersName;
-        private ColumnHeader columnHeaderEncodersFamily;
         private ColumnHeader columnHeaderEncodersVersion;
         private ColumnHeader columnHeaderEncodersDirectory;
         private Button buttonClearAudioFiles;
         private ColumnHeader columnHeaderAudioFilesDirectory;
-        private Label labelVBRValue_4_1;
-        private TrackBar trackBarVBR_4_1;
-        private RadioButton radioButtonModeVBR_4_1;
         private ToolTip toolTip1;
         private TrackBar trackBarSeek;
         private System.Windows.Forms.Timer timerTrackBarSeek;
