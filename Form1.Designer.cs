@@ -157,6 +157,7 @@
             listViewEncoders.ItemChecked += ListViewEncoders_ItemChecked;
             listViewEncoders.DragDrop += ListViewEncoders_DragDrop;
             listViewEncoders.DragEnter += ListViewEncoders_DragEnter;
+            listViewEncoders.KeyDown += ListViewEncoders_KeyDown;
             // 
             // columnHeaderEncodersName
             // 
@@ -219,6 +220,7 @@
             listViewAudioFiles.ItemChecked += ListViewAudioFiles_ItemChecked;
             listViewAudioFiles.DragDrop += ListViewAudioFiles_DragDrop;
             listViewAudioFiles.DragEnter += ListViewAudioFiles_DragEnter;
+            listViewAudioFiles.KeyDown += ListViewAudioFiles_KeyDown;
             // 
             // columnHeaderAudioFilesName
             // 

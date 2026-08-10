@@ -882,7 +882,6 @@ namespace Codec_Playground_H
                 Log($"❌ StackTrace: {ex.StackTrace}");
             }
         }
-
         private void LoadSettings()
         {
             Log($"📂 Loading settings from {_settingsFilePath}");
@@ -1141,6 +1140,7 @@ namespace Codec_Playground_H
             }
         }
 
+        // Encoders
         private void ListViewEncoders_DragEnter(object? sender, DragEventArgs e)
         {
             Log($"🖱️ DragEnter on encoders list");
@@ -1164,7 +1164,6 @@ namespace Codec_Playground_H
                 Log($"⚠️ Invalid file list");
             }
         }
-
         private void ListViewEncoders_DragDrop(object? sender, DragEventArgs e)
         {
             Log($"🖱️ DragDrop on encoders list");
@@ -1203,7 +1202,6 @@ namespace Codec_Playground_H
                 }
             }
         }
-
         private void AddEncoderToList(string encoderPath)
         {
             Log($"📌 AddEncoderToList: {encoderPath}");
@@ -1234,7 +1232,6 @@ namespace Codec_Playground_H
                 Log($"✅ First encoder auto-selected (list was empty)");
             }
         }
-
         private void ListViewEncoders_ItemChecked(object? sender, ItemCheckedEventArgs e)
         {
             Log($"📌 Encoder item checked: {e.Item.Text}, checked={e.Item.Checked}");
@@ -1277,7 +1274,6 @@ namespace Codec_Playground_H
                 ScheduleSeamlessSwap();
             }
         }
-
         private (string Name, string Version) GetEncoderInfo(string encoderPath)
         {
             Log($"🔍 GetEncoderInfo for: {encoderPath}");
@@ -1354,7 +1350,51 @@ namespace Codec_Playground_H
                 return (Path.GetFileName(encoderPath), "Unknown");
             }
         }
+        private void ListViewEncoders_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete && listViewEncoders.SelectedItems.Count > 0)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
 
+                List<ListViewItem> itemsToDelete = [.. listViewEncoders.SelectedItems.Cast<ListViewItem>()];
+                bool deletingActiveEncoder = itemsToDelete.Any(item => item.Tag?.ToString() == _selectedEncoderPath);
+
+                if (deletingActiveEncoder)
+                {
+                    StopDualPlayback();
+                    _selectedEncoderPath = null;
+                    _encodedFilePath = null;
+                    _needsReencoding = true;
+                }
+
+                foreach (ListViewItem item in itemsToDelete)
+                {
+                    listViewEncoders.Items.Remove(item);
+                }
+
+                if (listViewEncoders.Items.Count > 0)
+                {
+                    if (deletingActiveEncoder || _selectedEncoderPath == null)
+                    {
+                        listViewEncoders.Items[0].Checked = true;
+                        ListViewEncoders_ItemChecked(this, new ItemCheckedEventArgs(listViewEncoders.Items[0]));
+                    }
+                }
+                else
+                {
+                    _selectedEncoderPath = null;
+                    _encodedFilePath = null;
+                    _needsReencoding = true;
+                    UpdateEncodingUI();
+                }
+
+                ClearCache();
+                Log($"🗑️ Deleted {itemsToDelete.Count} encoders" + (deletingActiveEncoder ? " (active)" : ""));
+            }
+        }
+
+        // AudioFiles
         private void ListViewAudioFiles_DragEnter(object? sender, DragEventArgs e)
         {
             Log($"🖱️ DragEnter on audio files list");
@@ -1379,7 +1419,6 @@ namespace Codec_Playground_H
                 Log($"⚠️ Invalid file list");
             }
         }
-
         private void ListViewAudioFiles_DragDrop(object? sender, DragEventArgs e)
         {
             Log($"🖱️ DragDrop on audio files list");
@@ -1431,7 +1470,6 @@ namespace Codec_Playground_H
                 }
             }
         }
-
         private void AddAudioFileFileToList(string audioFileInputPath)
         {
             Log($"📌 AddAudioFileToList: {audioFileInputPath}");
@@ -1502,7 +1540,6 @@ namespace Codec_Playground_H
                 Log($"✅ First audio file auto-selected (list was empty)");
             }
         }
-
         private static (int Channels, int BitsPerSample, int SampleRate, long TotalSamples) ReadFlacStreamInfo(string filePath)
         {
             Log($"🔍 Reading FLAC STREAMINFO from: {filePath}");
@@ -1550,7 +1587,6 @@ namespace Codec_Playground_H
             Log($"❌ STREAMINFO block not found");
             throw new InvalidDataException("STREAMINFO block not found in FLAC file");
         }
-
         private void ListViewAudioFiles_ItemChecked(object? sender, ItemCheckedEventArgs e)
         {
             Log($"📌 Audio file item checked: {e.Item.Text}, checked={e.Item.Checked}");
@@ -1618,6 +1654,49 @@ namespace Codec_Playground_H
                     return;
                 }
                 StartEncodingForPlay(_originalFilePath);
+            }
+        }
+        private void ListViewAudioFiles_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete && listViewAudioFiles.SelectedItems.Count > 0)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+
+                List<ListViewItem> itemsToDelete = [.. listViewAudioFiles.SelectedItems.Cast<ListViewItem>()];
+                bool deletingActiveFile = itemsToDelete.Any(item => item.Tag?.ToString() == _originalFilePath);
+
+                if (deletingActiveFile)
+                {
+                    StopDualPlayback();
+                    _originalFilePath = null;
+                    _encodedFilePath = null;
+                    _needsReencoding = true;
+                }
+
+                foreach (ListViewItem item in itemsToDelete)
+                {
+                    listViewAudioFiles.Items.Remove(item);
+                }
+
+                if (listViewAudioFiles.Items.Count > 0)
+                {
+                    if (deletingActiveFile || _originalFilePath == null)
+                    {
+                        listViewAudioFiles.Items[0].Checked = true;
+                        ListViewAudioFiles_ItemChecked(this, new ItemCheckedEventArgs(listViewAudioFiles.Items[0]));
+                    }
+                }
+                else
+                {
+                    _originalFilePath = null;
+                    _encodedFilePath = null;
+                    _needsReencoding = true;
+                    UpdateEncodingUI();
+                }
+
+                ClearCache();
+                Log($"🗑️ Deleted {itemsToDelete.Count} audio files" + (deletingActiveFile ? " (active)" : ""));
             }
         }
 
