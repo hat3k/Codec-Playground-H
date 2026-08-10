@@ -4,12 +4,15 @@ A tool for real-time testing of encoder settings.
 
 Change encoder parameters on the fly and hear the difference immediately - no interruptions.
 
+<img width="860" height="679" alt="Untitled-2 (1)" src="https://github.com/user-attachments/assets/c2b43f72-b009-487c-b744-961b88f0e325" />
+
 ---
 ![GitHub all releases](https://img.shields.io/github/downloads/hat3k/Codec-Playground-H/total)
 
 ## What it does
 
 - Load WAV or FLAC files
+
 - Encode them using LAME with your chosen settings
 - **Seamless re-encode** - tweak parameters while playback continues
 - Instantly hear how each setting affects the sound
