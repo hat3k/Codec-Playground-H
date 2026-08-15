@@ -4,7 +4,7 @@ A tool for real-time testing of encoder settings.
 
 Change encoder parameters on the fly and hear the difference immediately - no interruptions.
 
-<img width="860" height="679" alt="Untitled-2 (3)" src="https://github.com/user-attachments/assets/6746abe7-805a-41da-b7df-a058ea7d6133" />
+<img src="https://github.com/user-attachments/assets/6746abe7-805a-41da-b7df-a058ea7d6133" />
 
 ---
 ![GitHub all releases](https://img.shields.io/github/downloads/hat3k/Codec-Playground-H/total)
