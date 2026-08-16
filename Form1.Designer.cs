@@ -104,7 +104,9 @@
             checkBoxCheckForUpdates = new CheckBox();
             timerTrackBarSeek = new System.Windows.Forms.Timer(components);
             tableLayoutPanelMain = new TableLayoutPanel();
+            panelPlayerControl = new Panel();
             groupBoxPlayerControl = new GroupBox();
+            labelEncoderSettingsReturnedByMI = new Label();
             panelSettings = new Panel();
             groupBox1 = new GroupBox();
             labelNoUpdates = new Label();
@@ -124,6 +126,7 @@
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarSeek).BeginInit();
             tableLayoutPanelMain.SuspendLayout();
+            panelPlayerControl.SuspendLayout();
             groupBoxPlayerControl.SuspendLayout();
             panelSettings.SuspendLayout();
             groupBox1.SuspendLayout();
@@ -570,7 +573,6 @@
             // textBoxUserPreset6
             // 
             textBoxUserPreset6.Location = new Point(101, 180);
-            textBoxUserPreset6.Multiline = true;
             textBoxUserPreset6.Name = "textBoxUserPreset6";
             textBoxUserPreset6.Size = new Size(280, 23);
             textBoxUserPreset6.TabIndex = 3;
@@ -578,7 +580,6 @@
             // textBoxUserPreset4
             // 
             textBoxUserPreset4.Location = new Point(101, 116);
-            textBoxUserPreset4.Multiline = true;
             textBoxUserPreset4.Name = "textBoxUserPreset4";
             textBoxUserPreset4.Size = new Size(280, 23);
             textBoxUserPreset4.TabIndex = 3;
@@ -586,7 +587,6 @@
             // textBoxUserPreset5
             // 
             textBoxUserPreset5.Location = new Point(101, 148);
-            textBoxUserPreset5.Multiline = true;
             textBoxUserPreset5.Name = "textBoxUserPreset5";
             textBoxUserPreset5.Size = new Size(280, 23);
             textBoxUserPreset5.TabIndex = 3;
@@ -594,7 +594,6 @@
             // textBoxUserPreset3
             // 
             textBoxUserPreset3.Location = new Point(101, 84);
-            textBoxUserPreset3.Multiline = true;
             textBoxUserPreset3.Name = "textBoxUserPreset3";
             textBoxUserPreset3.Size = new Size(280, 23);
             textBoxUserPreset3.TabIndex = 3;
@@ -602,7 +601,6 @@
             // textBoxUserPreset2
             // 
             textBoxUserPreset2.Location = new Point(101, 52);
-            textBoxUserPreset2.Multiline = true;
             textBoxUserPreset2.Name = "textBoxUserPreset2";
             textBoxUserPreset2.Size = new Size(280, 23);
             textBoxUserPreset2.TabIndex = 3;
@@ -610,7 +608,6 @@
             // textBoxUserPreset1
             // 
             textBoxUserPreset1.Location = new Point(101, 20);
-            textBoxUserPreset1.Multiline = true;
             textBoxUserPreset1.Name = "textBoxUserPreset1";
             textBoxUserPreset1.Size = new Size(280, 23);
             textBoxUserPreset1.TabIndex = 3;
@@ -792,9 +789,9 @@
             // 
             // progressBarEncodingProcess
             // 
-            progressBarEncodingProcess.Location = new Point(83, 82);
+            progressBarEncodingProcess.Location = new Point(83, 84);
             progressBarEncodingProcess.Name = "progressBarEncodingProcess";
-            progressBarEncodingProcess.Size = new Size(157, 23);
+            progressBarEncodingProcess.Size = new Size(286, 23);
             progressBarEncodingProcess.TabIndex = 6;
             progressBarEncodingProcess.Visible = false;
             // 
@@ -917,7 +914,7 @@
             // 
             tableLayoutPanelMain.ColumnCount = 1;
             tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanelMain.Controls.Add(groupBoxPlayerControl, 0, 2);
+            tableLayoutPanelMain.Controls.Add(panelPlayerControl, 0, 2);
             tableLayoutPanelMain.Controls.Add(splitContainerEncodersAndAudioFlies, 0, 0);
             tableLayoutPanelMain.Controls.Add(panelSettings, 0, 1);
             tableLayoutPanelMain.Dock = DockStyle.Fill;
@@ -931,8 +928,19 @@
             tableLayoutPanelMain.Size = new Size(858, 647);
             tableLayoutPanelMain.TabIndex = 3;
             // 
+            // panelPlayerControl
+            // 
+            panelPlayerControl.Controls.Add(groupBoxPlayerControl);
+            panelPlayerControl.Dock = DockStyle.Fill;
+            panelPlayerControl.Location = new Point(3, 409);
+            panelPlayerControl.Margin = new Padding(0);
+            panelPlayerControl.Name = "panelPlayerControl";
+            panelPlayerControl.Size = new Size(852, 235);
+            panelPlayerControl.TabIndex = 14;
+            // 
             // groupBoxPlayerControl
             // 
+            groupBoxPlayerControl.Controls.Add(labelEncoderSettingsReturnedByMI);
             groupBoxPlayerControl.Controls.Add(buttonPlayPause);
             groupBoxPlayerControl.Controls.Add(labelMixBalance);
             groupBoxPlayerControl.Controls.Add(buttonClearAudioFiles);
@@ -946,12 +954,21 @@
             groupBoxPlayerControl.Controls.Add(radioButtonPlayDifference);
             groupBoxPlayerControl.Controls.Add(trackBarSeek);
             groupBoxPlayerControl.Controls.Add(trackBarMixBalance);
-            groupBoxPlayerControl.Location = new Point(6, 412);
+            groupBoxPlayerControl.Location = new Point(3, 3);
             groupBoxPlayerControl.Name = "groupBoxPlayerControl";
             groupBoxPlayerControl.Size = new Size(420, 229);
             groupBoxPlayerControl.TabIndex = 14;
             groupBoxPlayerControl.TabStop = false;
             groupBoxPlayerControl.Text = "Player control";
+            // 
+            // labelEncoderSettingsReturnedByMI
+            // 
+            labelEncoderSettingsReturnedByMI.AutoSize = true;
+            labelEncoderSettingsReturnedByMI.Location = new Point(85, 88);
+            labelEncoderSettingsReturnedByMI.Name = "labelEncoderSettingsReturnedByMI";
+            labelEncoderSettingsReturnedByMI.Size = new Size(283, 15);
+            labelEncoderSettingsReturnedByMI.TabIndex = 14;
+            labelEncoderSettingsReturnedByMI.Text = "Here's the params string Encoder returnes (if it does)";
             // 
             // panelSettings
             // 
@@ -1056,6 +1073,7 @@
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarSeek).EndInit();
             tableLayoutPanelMain.ResumeLayout(false);
+            panelPlayerControl.ResumeLayout(false);
             groupBoxPlayerControl.ResumeLayout(false);
             groupBoxPlayerControl.PerformLayout();
             panelSettings.ResumeLayout(false);
@@ -1145,5 +1163,7 @@
         private RadioButton radioButton_Hidden_UserPreset_OFF;
         private CheckBox checkBoxCheckForUpdates;
         private Label labelNoUpdates;
+        private Panel panelPlayerControl;
+        private Label labelEncoderSettingsReturnedByMI;
     }
 }

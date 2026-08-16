@@ -1,7 +1,7 @@
+using MediaInfoLib;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -77,6 +77,7 @@ namespace Codec_Playground_H
         private string? _selectedEncoderPath;
         private readonly Dictionary<string, string> _encodedCache = [];
         private readonly Dictionary<string, float[]> _decodedCache = [];
+        private readonly Dictionary<string, string> _encoderSettingsReturnedByMICache = [];
         private readonly Dictionary<string, int> _delayCache = [];
         private readonly Lock _cacheLock = new();
         private string? _currentCacheKey = null;
@@ -151,11 +152,19 @@ namespace Codec_Playground_H
         {
             Log($"📋 Form1_Load started, version: {APP_VERSION}");
             Text = $"Codec Playground-H [{APP_VERSION}]";
+            labelEncoderSettingsReturnedByMI.Text = string.Empty;
             Log("📂 Loading settings...");
             LoadSettings();
             Log("📁 Ensuring temp folder exists...");
             EnsureTempFolderExists();
+            EnsureMediaInfoDllExists();
             Log("✅ Form1_Load completed");
+        }
+
+        private static void Log(string message)
+        {
+            string logMsg = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
+            Debug.WriteLine(logMsg);
         }
 
         private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -289,7 +298,6 @@ namespace Codec_Playground_H
                 Log($"❌ StackTrace: {ex.StackTrace}");
             }
         }
-
         private void LoadSettings()
         {
             Log($"📂 Loading settings from {_settingsFilePath}");
@@ -1631,20 +1639,7 @@ namespace Codec_Playground_H
             bool wasPlaying = _waveOut?.PlaybackState == PlaybackState.Playing;
             bool wasPaused = _waveOut?.PlaybackState == PlaybackState.Paused;
 
-            if (_waveOut != null)
-            {
-                _waveOut.Stop();
-                _waveOut.Dispose();
-                _waveOut = null;
-                _playgroundMixer = null;
-                _originalMemorySource = null;
-                timerTrackBarSeek.Stop();
-                trackBarSeek.Value = 0;
-                _currentPlaybackPosition = 0;
-                _currentPlayerState = PlayerState.Stopped;
-                buttonPlayPause.Text = "▶";
-                Log($"⏹️ Playback stopped for file change");
-            }
+            StopDualPlayback();
 
             if (wasPlaying || wasPaused)
             {
@@ -1756,6 +1751,7 @@ namespace Codec_Playground_H
                 Log($"▶️ Starting playback from cache");
                 InitializePlayback();
                 PlayDual();
+                UpdateEncoderSettingsReturnedByMILabel();
                 return;
             }
 
@@ -1870,6 +1866,7 @@ namespace Codec_Playground_H
                                 Log($"▶️ Starting playback after encoding");
                                 InitializePlayback();
                                 PlayDual();
+                                UpdateEncoderSettingsReturnedByMILabel();
                             }
                         });
                         return;
@@ -2094,6 +2091,9 @@ namespace Codec_Playground_H
 
                 AddToCache(cacheKey, tempEncodedFile, delay);
 
+                string encoderInfo = GetEncoderSettingsFromFile(tempEncodedFile);
+                Log($"📊 MediaInfo: {encoderInfo}");
+
                 Invoke(() =>
                 {
                     _encodedFilePath = tempEncodedFile;
@@ -2108,6 +2108,7 @@ namespace Codec_Playground_H
                         Log($"▶️ Starting playback after encoding");
                         InitializePlayback();
                         PlayDual();
+                        UpdateEncoderSettingsReturnedByMILabel();
                     }
                 });
             }
@@ -2139,7 +2140,6 @@ namespace Codec_Playground_H
                 Log($"🔚 EncodeFileAsync finished");
             }
         }
-
         private string GetCurrentCommandLineArgs()
         {
             string mode = "";
@@ -2410,6 +2410,7 @@ namespace Codec_Playground_H
                         _isSeamlessReencode = false;
                         _encodingStatus = EncodingStatus.Completed;
                         UpdateEncodingUI();
+                        UpdateEncoderSettingsReturnedByMILabel();
                         Log("✅ Seamless swap applied");
                     });
                 }
@@ -2893,6 +2894,7 @@ namespace Codec_Playground_H
             trackBarSeek.Value = 0;
             _currentPlaybackPosition = 0;
             _currentPlayerState = PlayerState.Stopped;
+            labelEncoderSettingsReturnedByMI.Text = string.Empty;
             buttonPlayPause.Text = "▶";
             Log($"⏹️ Playback stopped completely");
         }
@@ -3157,12 +3159,6 @@ namespace Codec_Playground_H
             }
         }
 
-        private static void Log(string message)
-        {
-            string logMsg = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
-            Debug.WriteLine(logMsg);
-        }
-
         private void RadioButtonMode_CheckedChanged(object? sender, EventArgs e)
         {
             if (sender is RadioButton rb && (rb == radioButton_Hidden_Mode_OFF_MP3 || rb == radioButton_Hidden_UserPreset_OFF))
@@ -3274,21 +3270,18 @@ namespace Codec_Playground_H
             Log($"📊 CBR trackbar: {labelCBRValue_MP3.Text}");
             OnSettingsChanged();
         }
-
         private void TrackBarVBR_Scroll(object? sender, EventArgs e)
         {
             labelVBRValue_MP3.Text = $"V{Math.Abs(trackBarVBR_MP3.Value)}";
             Log($"📊 VBR trackbar: {labelVBRValue_MP3.Text}");
             OnSettingsChanged();
         }
-
         private void TrackBarABR_Scroll(object? sender, EventArgs e)
         {
             labelABRValue_MP3.Text = AbrBitrates[trackBarABR_MP3.Value].ToString();
             Log($"📊 ABR trackbar: {labelABRValue_MP3.Text}");
             OnSettingsChanged();
         }
-
         private void CheckBoxQ_CheckedChanged(object? sender, EventArgs e)
         {
             bool en = checkBoxParameter_q_MP3.Checked && !radioButton_Hidden_Mode_OFF_MP3.Checked;
@@ -3297,14 +3290,12 @@ namespace Codec_Playground_H
             Log($"📊 Quality checkbox: {en}");
             OnSettingsChanged();
         }
-
         private void TrackBarQ_Scroll(object? sender, EventArgs e)
         {
             labelParameter_qValue_MP3.Text = $"q{Math.Abs(trackBarParameter_q_MP3.Value)}";
             Log($"📊 Quality trackbar: {labelParameter_qValue_MP3.Text}");
             OnSettingsChanged();
         }
-
         private void CheckBoxChannelsMix_CheckedChanged(object? sender, EventArgs e)
         {
             bool en = checkBoxChannelsModes_MP3.Checked && !radioButton_Hidden_Mode_OFF_MP3.Checked;
@@ -3314,7 +3305,6 @@ namespace Codec_Playground_H
             Log($"📊 Channel modes checkbox: {en}");
             OnSettingsChanged();
         }
-
         private void RadioButtonStereoMode_CheckedChanged(object? sender, EventArgs e)
         {
             if (sender is RadioButton rb && rb.Checked && checkBoxChannelsModes_MP3.Checked)
@@ -3334,7 +3324,6 @@ namespace Codec_Playground_H
             labelMixBalance.Text = $"{origPct} / {encPct}";
             Log($"🎚️ Mix balance: {origPct}% orig / {encPct}% enc");
         }
-
         private void TrackBarMixBalance_MouseDown(object? sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -3426,6 +3415,7 @@ namespace Codec_Playground_H
                 Log($"▶️ Starting playback from existing encoded file");
                 InitializePlayback();
                 PlayDual();
+                UpdateEncoderSettingsReturnedByMILabel();
             }
         }
         private void ButtonStop_Click(object? sender, EventArgs e)
@@ -3476,7 +3466,6 @@ namespace Codec_Playground_H
             Log($"✅ User preset {presetNumber} saved: '{args}'");
             OnSettingsChanged();
         }
-
         private void ButtonUserPresetClear_Click(object? sender, EventArgs e)
         {
             if (sender is not Button button) return;
@@ -3874,12 +3863,137 @@ namespace Codec_Playground_H
                 }
                 _encodedCache.Clear();
                 _decodedCache.Clear();
+                _encoderSettingsReturnedByMICache.Clear();
                 _delayCache.Clear();
                 _currentCacheKey = null;
                 Log("🗑️ Cache cleared");
             }
         }
 
+        // MediaInfo
+        private void EnsureMediaInfoDllExists()
+        {
+            string dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MediaInfo.dll");
+
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("Codec_Playground_H.MediaInfo.dll");
+            if (stream == null)
+            {
+                Log("⚠️ MediaInfo.dll resource not found in assembly.");
+                return;
+            }
+
+            using var md5 = MD5.Create();
+            byte[] resourceHash = md5.ComputeHash(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            if (File.Exists(dllPath))
+            {
+                using var fileStream = File.OpenRead(dllPath);
+                byte[] fileHash = md5.ComputeHash(fileStream);
+
+                if (resourceHash.SequenceEqual(fileHash))
+                {
+                    Log($"✅ MediaInfo.dll already exists and matches embedded version.");
+                    return;
+                }
+
+                Log($"🔄 MediaInfo.dll version mismatch. Updating...");
+                try { File.Delete(dllPath); } catch { }
+            }
+
+            try
+            {
+                using var fileStream = File.Create(dllPath);
+                stream.CopyTo(fileStream);
+                Log($"✅ MediaInfo.dll extracted to {dllPath}");
+            }
+            catch (Exception ex)
+            {
+                Log($"❌ Failed to extract MediaInfo.dll: {ex.Message}");
+                MessageBox.Show("Failed to extract MediaInfo.dll. Some features may not work.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+        private string GetEncoderSettingsFromFile(string filePath)
+        {
+            lock (_cacheLock)
+            {
+                if (_encoderSettingsReturnedByMICache.TryGetValue(filePath, out string? cachedSettings))
+                {
+                    return cachedSettings;
+                }
+            }
+
+            string fileToOpen = filePath;
+            bool isTempFile = false;
+
+            try
+            {
+                if (filePath.Length > 259)
+                {
+                    fileToOpen = Path.Combine(_tempFolder, $"mi_{Guid.NewGuid():N}.mp3");
+                    File.Copy(filePath, fileToOpen, true);
+                    isTempFile = true;
+                    Log($"📋 MediaInfo: using temp file due to long path ({filePath.Length} chars)");
+                }
+
+                var mediaInfo = new MediaInfo();
+
+                if (mediaInfo.Open(fileToOpen) == 0)
+                {
+                    mediaInfo.Close();
+                    return "MediaInfo failed to open file";
+                }
+
+                string encodingSettings = mediaInfo.Get(StreamKind.Audio, 0, "Encoded_Library_Settings");
+                mediaInfo.Close();
+
+                string result = !string.IsNullOrEmpty(encodingSettings) && encodingSettings != "N/A"
+                    ? encodingSettings
+                    : "Settings not stored in file";
+
+                lock (_cacheLock)
+                {
+                    _encoderSettingsReturnedByMICache[filePath] = result;
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log($"⚠️ MediaInfo error: {ex.Message}");
+                return "MediaInfo failed to open file";
+            }
+            finally
+            {
+                if (isTempFile && File.Exists(fileToOpen))
+                {
+                    try { File.Delete(fileToOpen); } catch { }
+                }
+            }
+        }
+        private void UpdateEncoderSettingsReturnedByMILabel()
+        {
+            if (!string.IsNullOrEmpty(_encodedFilePath) && File.Exists(_encodedFilePath))
+            {
+                string info = GetEncoderSettingsFromFile(_encodedFilePath);
+                labelEncoderSettingsReturnedByMI.Text = info;
+
+                bool isRealSettings = !string.IsNullOrEmpty(info) &&
+                                      info != "MediaInfo failed to open file" &&
+                                      info != "Settings not stored in file";
+
+                labelEncoderSettingsReturnedByMI.ForeColor = isRealSettings ? Color.Green : Color.Gray;
+                toolTip1.SetToolTip(labelEncoderSettingsReturnedByMI, info);
+            }
+            else
+            {
+                labelEncoderSettingsReturnedByMI.Text = "";
+                labelEncoderSettingsReturnedByMI.ForeColor = Color.Gray;
+            }
+        }
+
+        // Form closing and cleanup
         private void Form1_FormClosing(object? sender, FormClosingEventArgs e)
         {
             Log($"🔚 Form closing");
@@ -3915,7 +4029,6 @@ namespace Codec_Playground_H
             }
             Log($"🔚 Form closed");
         }
-
         private void CleanupTempFiles()
         {
             Log($"🗑️ CleanupTempFiles started");
@@ -3996,6 +4109,7 @@ namespace Codec_Playground_H
             Log($"🗑️ CleanupTempFiles completed");
         }
 
+        // Update check
         private bool _isUpdateInProgress = false;
         private const string REPO_OWNER = "hat3k";
         private const string REPO_NAME = "Codec-Playground-H";
@@ -4064,7 +4178,6 @@ namespace Codec_Playground_H
                 _isUpdateInProgress = false;
             }
         }
-
         private async Task<GitHubRelease?> GetLatestReleaseAsync()
         {
             try
@@ -4108,7 +4221,6 @@ namespace Codec_Playground_H
                 return null;
             }
         }
-
         private void ShowNotification(string message, bool isSuccess = true, int durationMs = 3000)
         {
             if (InvokeRequired)
@@ -4145,7 +4257,6 @@ namespace Codec_Playground_H
             };
             _notificationTimer.Start();
         }
-
         private void CheckBoxCheckForUpdates_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBoxCheckForUpdates.Checked)
