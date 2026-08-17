@@ -3543,6 +3543,10 @@ namespace Codec_Playground_H
                         Log($"⌨️ Shortcut: selected preset 6");
                         e.Handled = true;
                         break;
+                    case Keys.R:  // Random AudioFile
+                        SelectRandomAudioFile();
+                        e.Handled = true;
+                        break;
                 }
             }
 
@@ -3573,7 +3577,32 @@ namespace Codec_Playground_H
                 }
             }
         }
+        private void SelectRandomAudioFile()
+        {
+            if (listViewAudioFiles.Items.Count == 0)
+            {
+                Log($"⚠️ No audio files in list to select");
+                ShowNotification("⚠️ No audio files in list", false, 3000);
+                return;
+            }
 
+            if (listViewAudioFiles.Items.Count == 1)
+            {
+                Log($"ℹ️ Only one audio file, selecting it");
+                var item = listViewAudioFiles.Items[0];
+                item.Checked = true;
+                ShowNotification($"🎵 Selected: {item.Text}", true, 3000);
+                return;
+            }
+
+            var random = new Random();
+            int selectedIndex = random.Next(listViewAudioFiles.Items.Count);
+            var selectedItem = listViewAudioFiles.Items[selectedIndex];
+            selectedItem.Checked = true;
+
+            Log($"🎲 Random audio file selected: {selectedItem.Text} (index {selectedIndex})");
+            ShowNotification($"🎲 Random: {selectedItem.Text}", true, 3000);
+        }
         private void ABTestPresets(int count)
         {
             var presetRadios = new List<RadioButton>();
