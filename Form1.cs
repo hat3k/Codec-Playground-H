@@ -1,7 +1,9 @@
+using MathNet.Numerics.IntegralTransforms;
 using MediaInfoLib;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System.Diagnostics;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -843,7 +845,6 @@ namespace Codec_Playground_H
 
             float[] monoOrig = new float[totalFramesOrig];
             float[] monoEnc = new float[totalFramesEnc];
-
             for (int f = 0; f < totalFramesOrig; f++)
             {
                 float sum = 0;
@@ -851,7 +852,6 @@ namespace Codec_Playground_H
                     sum += origSamples[f * channels + c];
                 monoOrig[f] = sum / channels;
             }
-
             for (int f = 0; f < totalFramesEnc; f++)
             {
                 float sum = 0;
@@ -882,88 +882,206 @@ namespace Codec_Playground_H
                 Log($"🔧 Adjusted filter size to {filterSize} (low HF ratio)");
             }
 
-            float[] filteredOrig = monoOrig;
-            float[] filteredEnc = monoEnc;
-            if (filterSize > 1)
+            // Multi-window voting: analyze multiple sections of the file
+            int windowDurationSec = 2;
+            int windowSizeFrames = windowDurationSec * sampleRate;
+            int minWindowSizeFrames = sampleRate; // Minimum 1 second
+
+            // CRITICAL FIX: Adapt window size to available data
+            if (monoOrig.Length < windowSizeFrames * 2)
             {
-                Log($"🔄 Applying moving average filter (size={filterSize})");
-                filteredOrig = new float[monoOrig.Length];
-                filteredEnc = new float[monoEnc.Length];
-
-                for (int i = 0; i < monoOrig.Length; i++)
-                {
-                    float sum = 0; int count = 0;
-                    for (int j = Math.Max(0, i - filterSize / 2); j < Math.Min(monoOrig.Length, i + filterSize / 2); j++)
-                    { sum += monoOrig[j]; count++; }
-                    filteredOrig[i] = sum / count;
-                }
-
-                for (int i = 0; i < monoEnc.Length; i++)
-                {
-                    float sum = 0; int count = 0;
-                    for (int j = Math.Max(0, i - filterSize / 2); j < Math.Min(monoEnc.Length, i + filterSize / 2); j++)
-                    { sum += monoEnc[j]; count++; }
-                    filteredEnc[i] = sum / count;
-                }
-                Log($"✅ Filtering complete");
+                // File too short for multi-window with 2s windows
+                // Reduce window size to fit at least 3 windows
+                windowSizeFrames = monoOrig.Length / 3;
+                Log($"⚠️ File too short for 2s windows, adapted to {windowSizeFrames} frames ({windowSizeFrames / (double)sampleRate:F2}s)");
             }
 
-            float meanOrig = filteredOrig.Average();
-            float meanEnc = filteredEnc.Average();
-            Log($"📊 Mean original: {meanOrig:F6}, Mean encoded: {meanEnc:F6}");
-            for (int i = 0; i < filteredOrig.Length; i++) filteredOrig[i] -= meanOrig;
-            for (int i = 0; i < filteredEnc.Length; i++) filteredEnc[i] -= meanEnc;
-
-            double energyOrig = 0, energyEnc = 0;
-            for (int i = 0; i < filteredOrig.Length; i++) energyOrig += filteredOrig[i] * filteredOrig[i];
-            for (int i = 0; i < filteredEnc.Length; i++) energyEnc += filteredEnc[i] * filteredEnc[i];
-            double normFactor = Math.Sqrt(energyOrig * energyEnc);
-            Log($"📊 Energy original: {energyOrig:F6}, Energy encoded: {energyEnc:F6}, Norm factor: {normFactor:F6}");
-            if (normFactor < 1e-10)
+            if (windowSizeFrames < minWindowSizeFrames)
             {
-                Log($"⚠️ Norm factor too small, returning 0");
+                // Still too short, use single window
+                windowSizeFrames = monoOrig.Length;
+                Log($"⚠️ Using single window of {windowSizeFrames} frames ({windowSizeFrames / (double)sampleRate:F2}s)");
+            }
+
+            // Determine window positions (0%, 25%, 50%, 75%, 100% of file)
+            var windowPositions = new List<int>();
+            int numWindows = 5;
+
+            if (windowSizeFrames >= monoOrig.Length)
+            {
+                // Only one window possible
+                windowPositions.Add(0);
+                numWindows = 1;
+            }
+            else
+            {
+                for (int i = 0; i < numWindows; i++)
+                {
+                    int position = (int)(monoOrig.Length * i / (double)(numWindows - 1));
+                    int maxPosition = monoOrig.Length - windowSizeFrames;
+                    position = Math.Clamp(position - windowSizeFrames / 2, 0, maxPosition);
+                    if (position >= 0 && position + windowSizeFrames <= monoOrig.Length)
+                    {
+                        windowPositions.Add(position);
+                    }
+                }
+            }
+
+            Log($"🪟 Multi-window voting: {windowPositions.Count} windows, size={windowSizeFrames} frames ({windowSizeFrames / (double)sampleRate:F2}s)");
+
+            var allCandidates = new Dictionary<int, (int votes, double totalCorr)>();
+            int searchWindow = 12000;
+
+            foreach (int windowStart in windowPositions)
+            {
+                int windowEnd = Math.Min(windowStart + windowSizeFrames, monoOrig.Length);
+                int actualWindowSize = windowEnd - windowStart;
+
+                float[] windowOrig = new float[actualWindowSize];
+                float[] windowEnc = new float[actualWindowSize];
+                Array.Copy(monoOrig, windowStart, windowOrig, 0, actualWindowSize);
+                Array.Copy(monoEnc, windowStart, windowEnc, 0, actualWindowSize);
+
+                if (filterSize > 1)
+                {
+                    float[] filteredWindowOrig = new float[actualWindowSize];
+                    float[] filteredWindowEnc = new float[actualWindowSize];
+                    for (int i = 0; i < actualWindowSize; i++)
+                    {
+                        float sumO = 0, sumE = 0;
+                        int count = 0;
+                        for (int j = Math.Max(0, i - filterSize / 2); j < Math.Min(actualWindowSize, i + filterSize / 2); j++)
+                        {
+                            sumO += windowOrig[j];
+                            sumE += windowEnc[j];
+                            count++;
+                        }
+                        filteredWindowOrig[i] = sumO / count;
+                        filteredWindowEnc[i] = sumE / count;
+                    }
+                    windowOrig = filteredWindowOrig;
+                    windowEnc = filteredWindowEnc;
+                }
+
+                float meanOrig = windowOrig.Average();
+                float meanEnc = windowEnc.Average();
+                for (int i = 0; i < actualWindowSize; i++)
+                {
+                    windowOrig[i] -= meanOrig;
+                    windowEnc[i] -= meanEnc;
+                }
+
+                double energyOrig = 0, energyEnc = 0;
+                for (int i = 0; i < actualWindowSize; i++)
+                {
+                    energyOrig += windowOrig[i] * windowOrig[i];
+                    energyEnc += windowEnc[i] * windowEnc[i];
+                }
+                double normFactor = Math.Sqrt(energyOrig * energyEnc);
+
+                if (normFactor < 1e-10)
+                {
+                    Log($"⚠️ Window at {windowStart} has too low energy, skipping");
+                    continue;
+                }
+
+                int fftSize = 1;
+                while (fftSize < actualWindowSize * 2) fftSize <<= 1;
+
+                Complex[] fftOrig = new Complex[fftSize];
+                Complex[] fftEncBuf = new Complex[fftSize];
+                for (int i = 0; i < actualWindowSize; i++)
+                {
+                    fftOrig[i] = new Complex(windowOrig[i], 0);
+                    fftEncBuf[i] = new Complex(windowEnc[i], 0);
+                }
+
+                Fourier.Forward(fftOrig);
+                Fourier.Forward(fftEncBuf);
+
+                for (int i = 0; i < fftSize; i++)
+                    fftOrig[i] = Complex.Conjugate(fftOrig[i]) * fftEncBuf[i];
+
+                Fourier.Inverse(fftOrig);
+
+                var windowPeaks = new List<(int offset, double corr)>();
+                for (int offset = -searchWindow; offset < searchWindow; offset++)
+                {
+                    int idx = offset >= 0 ? offset : fftSize + offset;
+                    int idxPrev = offset > -searchWindow ? (offset - 1 >= 0 ? offset - 1 : fftSize + offset - 1) : -1;
+                    int idxNext = offset < searchWindow - 1 ? (offset + 1 >= 0 ? offset + 1 : fftSize + offset + 1) : -1;
+
+                    if (idxPrev < 0 || idxPrev >= fftSize || idxNext < 0 || idxNext >= fftSize) continue;
+
+                    double corr = fftOrig[idx].Real / normFactor;
+                    double corrPrev = fftOrig[idxPrev].Real / normFactor;
+                    double corrNext = fftOrig[idxNext].Real / normFactor;
+
+                    if (corr > corrPrev && corr > corrNext && corr > 0.001)
+                    {
+                        windowPeaks.Add((offset, corr));
+                    }
+                }
+
+                windowPeaks.Sort((a, b) => b.corr.CompareTo(a.corr));
+                var topPeaks = windowPeaks.Take(3).ToList();
+
+                Log($"🪟 Window at {windowStart / (double)sampleRate:F2}s: {topPeaks.Count} peaks");
+                foreach (var (offset, corr) in topPeaks)
+                {
+                    Log($"  📌 offset={offset} ({offset / (double)sampleRate * 1000:F2} ms), corr={corr:F6}");
+
+                    if (!allCandidates.ContainsKey(offset))
+                        allCandidates[offset] = (0, 0);
+
+                    var current = allCandidates[offset];
+                    allCandidates[offset] = (current.votes + 1, current.totalCorr + corr);
+                }
+            }
+
+            if (allCandidates.Count == 0)
+            {
+                Log($"⚠️ No candidates found in any window, returning 0");
                 return 0;
             }
 
-            int searchWindow = 12000;
-            int bestFrameOffset = 0;
-            double maxCorr = double.MinValue;
-            Log($"🔍 Running cross-correlation with window ±{searchWindow} frames");
+            var sortedCandidates = allCandidates
+                .OrderByDescending(kv => kv.Value.votes)
+                .ThenByDescending(kv => kv.Value.totalCorr / kv.Value.votes)
+                .ToList();
 
-            for (int offset = -searchWindow; offset < searchWindow; offset++)
+            Log($"🗳️ Voting results:");
+            foreach (var (offset, (votes, totalCorr)) in sortedCandidates.Take(10))
             {
-                double sum = 0;
-                int start = Math.Max(0, -offset);
-                int end = Math.Min(filteredOrig.Length, filteredEnc.Length - offset);
-                for (int f = start; f < end; f++)
-                    sum += filteredOrig[f] * filteredEnc[f + offset];
+                double avgCorr = totalCorr / votes;
+                Log($"  📊 offset={offset} ({offset / (double)sampleRate * 1000:F2} ms): {votes} votes, avgCorr={avgCorr:F6}");
+            }
 
-                double normalizedCorr = sum / normFactor;
-                if (normalizedCorr > maxCorr)
-                {
-                    maxCorr = normalizedCorr;
-                    bestFrameOffset = offset;
-                }
+            var winner = sortedCandidates[0];
+            int bestFrameOffset = winner.Key;
+            double avgCorrelation = winner.Value.totalCorr / winner.Value.votes;
+
+            double consensusThreshold = windowPositions.Count * 0.5;
+            if (winner.Value.votes < consensusThreshold)
+            {
+                Log($"⚠️ Weak consensus: winner has {winner.Value.votes}/{windowPositions.Count} votes (< {consensusThreshold:F1})");
             }
 
             int sampleOffset = bestFrameOffset * channels;
-            Log($"✅ OFFLINE DELAY: {sampleOffset} samples, {sampleOffset / (double)channels / sampleRate * 1000:F2} ms, corr={maxCorr:F4}");
+            Log($"✅ OFFLINE DELAY (multi-window): {sampleOffset} samples, {sampleOffset / (double)channels / sampleRate * 1000:F2} ms, votes={winner.Value.votes}, avgCorr={avgCorrelation:F4}");
             return sampleOffset;
         }
 
         private int CalculateCodecDelay(string originalPath, string encodedPath, int bitrate)
         {
             Log($"🔍 CalculateCodecDelay: original={Path.GetFileName(originalPath)}, encoded={Path.GetFileName(encodedPath)}, bitrate={bitrate}");
-
             ISampleProvider? origProvider = null;
             WaveFormat? origFormat = null;
             IDisposable? origDisposable = null;
-
             try
             {
                 string ext = Path.GetExtension(originalPath).ToLower();
                 Log($"📄 Original file extension: {ext}");
-
                 if (ext == ".wav")
                 {
                     var wav = new WaveFileReader(originalPath);
@@ -985,86 +1103,54 @@ namespace Codec_Playground_H
                     Log($"⚠️ Unsupported format: {ext}, returning 0");
                     return 0;
                 }
-
                 if (origFormat == null || origProvider == null)
                 {
                     Log($"⚠️ Failed to get format or provider for original file");
                     return 0;
                 }
-
                 Log($"📌 Opening encoded MP3 file: {encodedPath}");
                 using var mpegReader = new MediaFoundationReader(encodedPath);
                 var mp3Provider = mpegReader.ToSampleProvider();
                 var mp3Format = mpegReader.WaveFormat;
-
                 ISampleProvider finalMp3 = mp3Provider;
                 if (mp3Format.Channels == 1 && origFormat.Channels == 2)
                     finalMp3 = new MonoToStereoSampleProvider(finalMp3);
                 if (mp3Format.SampleRate != origFormat.SampleRate)
                     finalMp3 = new WdlResamplingSampleProvider(finalMp3, origFormat.SampleRate);
-
                 int sampleRate = origFormat.SampleRate;
                 int channels = origFormat.Channels;
 
-                int searchSamples = (int)(3.0 * sampleRate * channels);
+                // Read up to 10 seconds of data for multi-window voting
+                int searchDurationSec = 10;
+                int searchSamples = searchDurationSec * sampleRate * channels;
                 float[] origBuffer = new float[searchSamples];
                 float[] encBuffer = new float[searchSamples];
-
                 int readOrig = origProvider.Read(origBuffer, 0, searchSamples);
                 int readEnc = finalMp3.Read(encBuffer, 0, searchSamples);
                 int maxRead = Math.Min(readOrig, readEnc);
 
-                if (maxRead < 100)
+                if (maxRead < 1000)
                 {
-                    Log($"⚠️ Too few samples read, returning 0");
+                    Log($"⚠️ Too few samples read ({maxRead}), returning 0");
                     return 0;
                 }
 
-                int windowSize = Math.Min((int)(0.5 * sampleRate * channels), maxRead);
-                int bestStart = 0;
-                float maxEnergy = 0;
+                Log($"📊 Read {maxRead} samples ({maxRead / (double)channels / sampleRate:F2}s) for delay calculation");
 
-                int step = Math.Max(1, windowSize / 10);
-                for (int start = 0; start + windowSize < maxRead; start += step)
-                {
-                    float energy = 0;
-                    int end = Math.Min(start + windowSize, maxRead);
-                    for (int i = start; i < end; i++)
-                    {
-                        float s = origBuffer[i];
-                        energy += s * s;
-                    }
-                    if (energy > maxEnergy)
-                    {
-                        maxEnergy = energy;
-                        bestStart = start;
-                    }
-                }
-
-                if (maxEnergy < 0.0001)
-                {
-                    Log($"⚠️ Low energy ({maxEnergy:F6}), using first 0.5 seconds as fallback");
-                    bestStart = 0;
-                }
-
-                Log($"📊 Best window: {bestStart / (double)channels / sampleRate * 1000:F1} ms, energy: {maxEnergy:F6}");
-
-                int actualSize = Math.Min(windowSize, maxRead - bestStart);
-                float[] origWindow = new float[actualSize];
-                float[] encWindow = new float[actualSize];
-                Array.Copy(origBuffer, bestStart, origWindow, 0, actualSize);
-                Array.Copy(encBuffer, bestStart, encWindow, 0, actualSize);
+                // Pass all read data to FindSampleOffsetFromArrays for multi-window voting
+                float[] origWindow = new float[maxRead];
+                float[] encWindow = new float[maxRead];
+                Array.Copy(origBuffer, origWindow, maxRead);
+                Array.Copy(encBuffer, encWindow, maxRead);
 
                 int delay = FindSampleOffsetFromArrays(origWindow, encWindow, channels, sampleRate, bitrate);
 
                 if (delay < 0)
                 {
                     Log($"⚠️ Negative delay {delay}, searching only positive delays...");
-
-                    int monoSize = actualSize / channels;
+                    int monoSize = maxRead / channels;
                     float[] monoOrig = new float[monoSize];
                     float[] monoEnc = new float[monoSize];
-
                     for (int f = 0; f < monoSize; f++)
                     {
                         float sumOrig = 0, sumEnc = 0;
@@ -1077,24 +1163,20 @@ namespace Codec_Playground_H
                         monoOrig[f] = sumOrig / channels;
                         monoEnc[f] = sumEnc / channels;
                     }
-
                     int maxDelay = Math.Min(12000, monoSize / 2);
                     int bestDelay = 0;
                     double bestCorr = -1;
-
                     for (int d = 0; d < maxDelay; d += 5)
                     {
                         double corr = 0;
                         double normOrig = 0, normEnc = 0;
                         int len = monoSize - d;
-
                         for (int i = 0; i < len; i++)
                         {
                             corr += monoOrig[i] * monoEnc[i + d];
                             normOrig += monoOrig[i] * monoOrig[i];
                             normEnc += monoEnc[i + d] * monoEnc[i + d];
                         }
-
                         if (normOrig > 0 && normEnc > 0)
                         {
                             corr /= Math.Sqrt(normOrig * normEnc);
@@ -1105,17 +1187,9 @@ namespace Codec_Playground_H
                             }
                         }
                     }
-
                     delay = bestDelay * channels;
                     Log($"✅ Found positive delay: {delay} samples (corr={bestCorr:F4})");
                 }
-
-                if (delay > 20000)
-                {
-                    Log($"⚠️ Delay too large ({delay} samples), capping to 0");
-                    delay = 0;
-                }
-
                 Log($"✅ Final delay: {delay} samples ({delay / (double)channels / sampleRate * 1000:F2} ms)");
                 return delay;
             }
@@ -1129,7 +1203,6 @@ namespace Codec_Playground_H
                 origDisposable?.Dispose();
             }
         }
-
         private double ConvertWavBytesToMilliseconds(long wavBytes)
         {
             WaveFormat? format = _originalFormat;
@@ -3815,7 +3888,6 @@ namespace Codec_Playground_H
             else if (radioButtonModeVBR_MP3.Checked)
                 _ = settings2.Append($"VBR_{Math.Abs(trackBarVBR_MP3.Value)}|");
 
-
             if (checkBoxParameter_q_MP3.Checked)
                 _ = settings2.Append($"q{Math.Abs(trackBarParameter_q_MP3.Value)}|");
 
@@ -3825,7 +3897,7 @@ namespace Codec_Playground_H
                 else if (radioButtonStereo_MP3.Checked) _ = settings2.Append("s|");
                 else if (radioButtonMono_MP3.Checked) _ = settings2.Append("m|");
             }
-            
+
             byte[] bytes2 = Encoding.UTF8.GetBytes(settings2.ToString());
             byte[] hash2 = SHA256.HashData(bytes2);
             string hashString2 = Convert.ToBase64String(hash2)
@@ -4336,7 +4408,7 @@ namespace Codec_Playground_H
             public string LabelABR_MP3 { get; set; } = "320";
             public string LabelVBR_MP3 { get; set; } = "V0";
             public string LabelQuality_MP3 { get; set; } = "q0";
-            
+
             // Balance of Mix mode
             public int MixBalanceValue { get; set; } = 50;
         }
