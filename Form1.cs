@@ -1992,7 +1992,7 @@ namespace Codec_Playground_H
         {
             if (_settingsDebounceTimer == null)
             {
-                _settingsDebounceTimer = new System.Windows.Forms.Timer { Interval = 50 };
+                _settingsDebounceTimer = new System.Windows.Forms.Timer { Interval = 10 };
                 _settingsDebounceTimer.Tick += OnSeamlessDebounceTick;
             }
             _settingsDebounceTimer.Stop();
@@ -2578,15 +2578,9 @@ namespace Codec_Playground_H
             private int _sampleOffset;
             private readonly int _bytesPerFrameOriginal;
             private volatile float _mixBalance = 0.5f;
-            private readonly float[] _delayBufferOrig;
-            private int _origWriteIdx;
-            private int _origReadIdx;
-            private int _bufferedSamplesOrig;
             private readonly Lock _seekLock = new();
-
             public PlayMode CurrentMode { get; set; } = PlayMode.Original;
             public WaveFormat WaveFormat { get; }
-
             public CodecPlaygroundMixer(MemorySampleSource original, MemorySampleSource encoded, WaveFormat originalFormat, int sampleOffset = 0)
             {
                 Log($"🔧 Mixer ctor: ch={originalFormat.Channels}, rate={originalFormat.SampleRate}, offset={sampleOffset}");
@@ -2597,26 +2591,9 @@ namespace Codec_Playground_H
                 WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(_sampleRate, _channels);
                 _sampleOffset = sampleOffset;
                 _bytesPerFrameOriginal = originalFormat.Channels * (originalFormat.BitsPerSample / 8);
-                _delayBufferOrig = new float[192000];
-                ResetSync();
-            }
-
-            public void ResetSync()
-            {
-                lock (_seekLock) { ResetSyncInternal(); }
-            }
-            private void ResetSyncInternal()
-            {
-                _origWriteIdx = 0;
-                _origReadIdx = 0;
-                _bufferedSamplesOrig = 0;
-                Array.Clear(_delayBufferOrig, 0, _delayBufferOrig.Length);
-
-                if (_sampleOffset > 0 && _sampleOffset < _delayBufferOrig.Length)
-                {
-                    _origReadIdx = (_origWriteIdx - _sampleOffset + _delayBufferOrig.Length) % _delayBufferOrig.Length;
-                    _bufferedSamplesOrig = _sampleOffset;
-                }
+                _sourceOriginal.PositionSamples = 0;
+                _sourceEncoded.PositionSamples = Math.Clamp(sampleOffset, 0, _sourceEncoded.LengthSamples);
+                Log($"🔧 Mixer init: origPos=0, encPos={_sourceEncoded.PositionSamples}");
             }
             public void SeekToBytes(long originalBytesPosition)
             {
@@ -2624,47 +2601,9 @@ namespace Codec_Playground_H
                 {
                     long frame = originalBytesPosition / _bytesPerFrameOriginal;
                     long samplePos = frame * _channels;
-
-                    _sourceEncoded.PositionSamples = samplePos;
-                    _origWriteIdx = 0;
-                    _origReadIdx = 0;
-                    _bufferedSamplesOrig = 0;
-                    Array.Clear(_delayBufferOrig, 0, _delayBufferOrig.Length);
-
-                    if (_sampleOffset > 0 && _sampleOffset < _delayBufferOrig.Length)
-                    {
-                        int D = _sampleOffset;
-                        long preStart = samplePos - D;
-
-                        if (preStart >= 0)
-                        {
-                            _sourceOriginal.PositionSamples = preStart;
-                            float[] preBuf = new float[D];
-                            int preRead = _sourceOriginal.Read(preBuf, 0, D);
-
-                            for (int i = 0; i < preRead; i++)
-                            {
-                                _delayBufferOrig[i] = preBuf[i];
-                            }
-                            _origWriteIdx = preRead % _delayBufferOrig.Length;
-                            _origReadIdx = 0;
-                            _bufferedSamplesOrig = preRead;
-                            Log($"🔄 Seek: pre-filled {preRead} delay samples from pos {preStart}");
-                        }
-                        else
-                        {
-                            _sourceOriginal.PositionSamples = 0;
-                            _origReadIdx = (_origWriteIdx - D + _delayBufferOrig.Length) % _delayBufferOrig.Length;
-                            _bufferedSamplesOrig = D;
-                            Log($"🔄 Seek: start of file, using {D} zero delay samples");
-                        }
-                    }
-                    else
-                    {
-                        _sourceOriginal.PositionSamples = samplePos;
-                    }
-
-                    Log($"🔄 Mixer SeekToBytes: {originalBytesPosition} B → frame {frame}");
+                    _sourceOriginal.PositionSamples = samplePos;
+                    _sourceEncoded.PositionSamples = Math.Clamp(samplePos + _sampleOffset, 0, _sourceEncoded.LengthSamples);
+                    Log($"🔄 Mixer SeekToBytes: {originalBytesPosition} B → origPos={samplePos}, encPos={samplePos + _sampleOffset}");
                 }
             }
             public long GetPositionBytes()
@@ -2686,27 +2625,14 @@ namespace Codec_Playground_H
                 {
                     float[] rawOrig = new float[count];
                     float[] rawEnc = new float[count];
-
                     int readOrig = _sourceOriginal.Read(rawOrig, 0, count);
                     int readEnc = _sourceEncoded.Read(rawEnc, 0, count);
-
                     if (readOrig == 0 && readEnc == 0) return 0;
-
                     int maxRead = Math.Max(readOrig, readEnc);
-
                     for (int i = 0; i < maxRead; i++)
                     {
                         float sOrig = (i < readOrig) ? rawOrig[i] : 0f;
-                        _delayBufferOrig[_origWriteIdx] = sOrig;
-                        _origWriteIdx = (_origWriteIdx + 1) % _delayBufferOrig.Length;
-                        if (_bufferedSamplesOrig < _delayBufferOrig.Length) _bufferedSamplesOrig++;
-                    }
-
-                    for (int i = 0; i < maxRead; i++)
-                    {
-                        float sOrig = PopOrig();
                         float sEnc = (i < readEnc) ? rawEnc[i] : 0f;
-
                         switch (CurrentMode)
                         {
                             case PlayMode.Original: buffer[offset + i] = sOrig; break;
@@ -2719,68 +2645,22 @@ namespace Codec_Playground_H
                             case PlayMode.PhaseTest: buffer[offset + i] = sOrig - sOrig; break;
                         }
                     }
-
                     return maxRead;
                 }
-            }
-            private float PopOrig()
-            {
-                if (_bufferedSamplesOrig == 0) return 0f;
-                float s = _delayBufferOrig[_origReadIdx];
-                _origReadIdx = (_origReadIdx + 1) % _delayBufferOrig.Length;
-                _bufferedSamplesOrig--;
-                return s;
             }
             public void SwapEncoded(MemorySampleSource newEncoded, int newSampleOffset)
             {
                 lock (_seekLock)
                 {
+                    // Never touch _sourceOriginal.PositionSamples
+                    // Original plays continuously — no seeking backward, no glitches.
+                    // Only encoded source is repositioned: currentOriginalPos + newDelay
                     long currentReadPos = _sourceOriginal.PositionSamples;
-                    long newEncPos = Math.Clamp(currentReadPos, 0, newEncoded.LengthSamples);
+                    long newEncPos = Math.Clamp(currentReadPos + newSampleOffset, 0, newEncoded.LengthSamples);
                     newEncoded.PositionSamples = newEncPos;
-
-                    _origWriteIdx = 0;
-                    _origReadIdx = 0;
-                    _bufferedSamplesOrig = 0;
-                    Array.Clear(_delayBufferOrig, 0, _delayBufferOrig.Length);
-
-                    if (newSampleOffset > 0 && newSampleOffset < _delayBufferOrig.Length)
-                    {
-                        int D = newSampleOffset;
-                        long preStart = currentReadPos - D;
-
-                        if (preStart >= 0)
-                        {
-                            _sourceOriginal.PositionSamples = preStart;
-                            float[] preBuf = new float[D];
-                            int preRead = _sourceOriginal.Read(preBuf, 0, D);
-
-                            for (int i = 0; i < preRead; i++)
-                            {
-                                _delayBufferOrig[i] = preBuf[i];
-                            }
-                            _origWriteIdx = preRead % _delayBufferOrig.Length;
-                            _origReadIdx = 0;
-                            _bufferedSamplesOrig = preRead;
-                            Log($"🔀 SwapEncoded: pre-filled {preRead} samples from pos {preStart}");
-                        }
-                        else
-                        {
-                            _sourceOriginal.PositionSamples = 0;
-                            _origReadIdx = (_origWriteIdx - D + _delayBufferOrig.Length) % _delayBufferOrig.Length;
-                            _bufferedSamplesOrig = D;
-                            Log($"🔀 SwapEncoded: near start, using {D} zero delay samples");
-                        }
-                    }
-                    else
-                    {
-                        _sourceOriginal.PositionSamples = currentReadPos;
-                    }
-
                     _sourceEncoded = newEncoded;
                     _sampleOffset = newSampleOffset;
-
-                    Log($"🔀 SwapEncoded: readPos={currentReadPos}, newDelay={newSampleOffset}, newEncPos={newEncPos}, bufferedNow={_bufferedSamplesOrig}");
+                    Log($"🔀 SwapEncoded: origPos={currentReadPos} (unchanged!), newDelay={newSampleOffset}, newEncPos={newEncPos}");
                 }
             }
             public void SetMixBalance(float value)
