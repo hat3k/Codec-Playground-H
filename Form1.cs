@@ -1395,8 +1395,11 @@ namespace Codec_Playground_H
                 }
             }
         }
-        private async Task EncodeFileAsync(string inputPath, string cacheKey, string uiArgs, string presetArgs, bool isPreset, CancellationToken ct)
+        private async Task<(string EncodedPath, float[]? PreloadedSamples)> EncodeFileAsync(string inputPath, string cacheKey, string uiArgs, string presetArgs, bool isPreset, CancellationToken ct)
         {
+            string resultEncodedPath = string.Empty;
+            float[]? resultPreloadedSamples = null;
+
             Log($"📝 EncodeFileAsync started: input={Path.GetFileName(inputPath)}, cacheKey={cacheKey}");
             if (string.IsNullOrEmpty(_selectedEncoderPath))
                 throw new InvalidOperationException("Encoder is not selected.");
@@ -1455,7 +1458,8 @@ namespace Codec_Playground_H
                             {
                                 _pendingPlayAfterEncode = false;
                                 Log($"▶️ Starting playback after encoding");
-                                InitializePlayback();
+
+                                InitializePlayback(preloadedSamples: null);
                                 PlayDual();
                                 UpdateEncoderSettingsReturnedByMILabel();
                                 if (!settingsMatch)
@@ -1466,7 +1470,7 @@ namespace Codec_Playground_H
                                 }
                             }
                         });
-                        return;
+                        return (tempEncodedFile, null);
                     }
                     else
                     {
@@ -1483,6 +1487,9 @@ namespace Codec_Playground_H
                 bool needsConversion = false;
                 int targetBits = 16;
                 Log($"📄 Input extension: {ext}");
+
+                float[]? convertedOriginalSamples = null;
+
                 if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                 {
                     using var checkReader = new WaveFileReader(inputPath);
@@ -1556,18 +1563,26 @@ namespace Codec_Playground_H
                             sourceProvider = audioReader;
                             Log($"📊 Source: {sampleRate}Hz, {channels}ch");
                         }
+
+                        // Read all samples into memory during conversion
+                        convertedOriginalSamples = ReadAllSamples(sourceProvider);
+                        var convertedFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
+                        Log($"💾 Original samples loaded during conversion: {convertedOriginalSamples.Length} samples");
+
                         IWaveProvider waveWriter;
                         WaveFormat targetFormat;
                         if (targetBits == 24)
                         {
                             targetFormat = new WaveFormat(sampleRate, 24, channels);
-                            waveWriter = new SampleToWaveProvider24(sourceProvider);
+                            var memSource = new MemorySampleSource(convertedOriginalSamples, convertedFormat);
+                            waveWriter = new SampleToWaveProvider24(memSource);
                             Log($"📌 Target format: 24-bit PCM");
                         }
                         else
                         {
                             targetFormat = new WaveFormat(sampleRate, 16, channels);
-                            waveWriter = new SampleToWaveProvider16(sourceProvider);
+                            var memSource = new MemorySampleSource(convertedOriginalSamples, convertedFormat);
+                            waveWriter = new SampleToWaveProvider16(memSource);
                             Log($"📌 Target format: 16-bit PCM");
                         }
                         Log($"🔄 Converting to {targetBits}-bit PCM...");
@@ -1595,6 +1610,9 @@ namespace Codec_Playground_H
                     }
                     lameInputPath = tempPreEncodeWav;
                     Log($"✅ Pre-encode: {new FileInfo(tempPreEncodeWav).Length} bytes ({targetBits}-bit)");
+
+                    // Store preloaded samples to return later
+                    resultPreloadedSamples = convertedOriginalSamples;
                 }
                 Log($"📁 Encoding: {lameInputPath} → {Path.GetFileName(tempEncodedFile)}");
                 string args = BuildLameArguments(lameInputPath, tempEncodedFile, uiArgs, presetArgs, isPreset);
@@ -1673,6 +1691,10 @@ namespace Codec_Playground_H
                 AddToCache(cacheKey, tempEncodedFile, delay);
                 string encoderInfo = GetEncoderSettingsFromFile(tempEncodedFile);
                 Log($"📊 MediaInfo: {encoderInfo}");
+
+                // Capture preloaded samples for use inside Invoke lambda
+                float[]? samplesForInvoke = resultPreloadedSamples;
+
                 Invoke(() =>
                 {
                     _encodedFilePath = tempEncodedFile;
@@ -1689,7 +1711,8 @@ namespace Codec_Playground_H
                     {
                         _pendingPlayAfterEncode = false;
                         Log($"▶️ Starting playback after encoding");
-                        InitializePlayback();
+                        // Pass preloaded samples to avoid second disk read
+                        InitializePlayback(preloadedSamples: samplesForInvoke);
                         PlayDual();
                         UpdateEncoderSettingsReturnedByMILabel();
                         if (!settingsMatch)
@@ -1704,6 +1727,9 @@ namespace Codec_Playground_H
                         Log($"ℹ️ Pending play was canceled (file switched or stopped), result cached only");
                     }
                 });
+
+                resultEncodedPath = tempEncodedFile;
+                return (resultEncodedPath, resultPreloadedSamples);
             }
             catch (OperationCanceledException)
             {
@@ -1778,6 +1804,8 @@ namespace Codec_Playground_H
                 Log($"🚀 Encoding task started");
                 try
                 {
+                    // EncodeFileAsync now returns a tuple instead of using out parameters
+                    // Playback initialization with preloaded samples happens inside EncodeFileAsync via Invoke
                     await EncodeFileAsync(originalFilePath, cacheKey, uiArgs, presetArgs, isPreset, token);
                 }
                 catch (OperationCanceledException)
@@ -2885,31 +2913,53 @@ namespace Codec_Playground_H
             return ms;
         }
 
-        private void InitializePlayback(bool skipStop = false)
+        private void InitializePlayback(bool skipStop = false, float[]? preloadedSamples = null)
         {
-            Log($"🎵 InitializePlayback started (skipStop={skipStop})");
-
+            Log($"🎵 InitializePlayback started (skipStop={skipStop}, hasPreloaded={preloadedSamples != null})");
             if (!skipStop)
             {
                 StopDualPlayback();
             }
-
             if (string.IsNullOrEmpty(_originalFilePath) || !File.Exists(_originalFilePath))
             {
                 Log($"⚠️ No valid original file: {_originalFilePath}");
                 return;
             }
-
             try
             {
-                float[] origData = LoadOriginalToMemory(out WaveFormat originalFormat);
+                float[] origData;
+                WaveFormat originalFormat;
+
+                // Use preloaded samples if available to avoid second disk read
+                if (preloadedSamples != null)
+                {
+                    Log($"⚡ Using preloaded original samples ({preloadedSamples.Length} samples) - skipping disk read");
+                    origData = preloadedSamples;
+                    // When preloaded, we still need original format for mixer bytes-per-frame calculation
+                    // Opening reader just for headers is instant (no audio data read)
+                    string ext = Path.GetExtension(_originalFilePath!).ToLower();
+                    if (ext == ".wav")
+                    {
+                        using var wav = new WaveFileReader(_originalFilePath);
+                        originalFormat = wav.WaveFormat;
+                    }
+                    else
+                    {
+                        using var audio = new AudioFileReader(_originalFilePath);
+                        originalFormat = audio.WaveFormat;
+                    }
+                }
+                else
+                {
+                    origData = LoadOriginalToMemory(out originalFormat);
+                }
+
                 _originalFormat = originalFormat;
                 _originalBytesPerFrame = originalFormat.Channels * (originalFormat.BitsPerSample / 8);
                 var floatFormat = WaveFormat.CreateIeeeFloatWaveFormat(originalFormat.SampleRate, originalFormat.Channels);
                 _originalMemorySource = new MemorySampleSource(origData, floatFormat);
                 Log($"✅ Original loaded to memory: {origData.Length} samples, format={originalFormat}");
                 waveformSeek.SetAudioData(origData, originalFormat.Channels);
-
                 if (!string.IsNullOrEmpty(_encodedFilePath) && File.Exists(_encodedFilePath))
                 {
                     int delaySamples = 0;
@@ -2938,12 +2988,10 @@ namespace Codec_Playground_H
                     _activeEncodedCacheKey = _currentCacheKey;
                     Log($"✅ Mixer created, mode={_currentPlayMode}, activeKey={_activeEncodedCacheKey}");
                 }
-
                 _waveOut = new WasapiOut();
                 _waveOut.PlaybackStopped += WaveOut_PlaybackStopped!;
                 _waveOut.Init(_playgroundMixer != null ? _playgroundMixer : _originalMemorySource);
                 Log("📌 WasapiOut initialized");
-
                 if (_currentPlaybackPosition > 0)
                 {
                     long totalBytes = GetPlaybackTotalBytes();
@@ -2953,7 +3001,6 @@ namespace Codec_Playground_H
                     Log($"📌 Restoring position: {safePosition} bytes (requested: {_currentPlaybackPosition}, max: {totalBytes})");
                     SeekPlaybackToBytes(safePosition);
                 }
-
                 Log($"✅ InitializePlayback completed");
             }
             catch (Exception ex)
