@@ -66,7 +66,7 @@ namespace Codec_Playground_H
         private MemorySampleSource? _originalMemorySource;
         private WaveFormat? _originalFormat;
         private int _originalBytesPerFrame;
-        private bool _isDraggingTrackBarSeek = false;
+        private bool _isDraggingWaveformSeek = false;
         private bool _loopPlayback = true;
         private long _currentPlaybackPosition = 0;
 
@@ -1045,7 +1045,7 @@ namespace Codec_Playground_H
 
             _originalFilePath = newPath;
             _currentPlaybackPosition = 0;
-            trackBarSeek.Value = 0;
+            waveformSeek.Position = 0f;
             _encodedFilePath = null;
             _needsReencoding = true;
 
@@ -2908,6 +2908,7 @@ namespace Codec_Playground_H
                 var floatFormat = WaveFormat.CreateIeeeFloatWaveFormat(originalFormat.SampleRate, originalFormat.Channels);
                 _originalMemorySource = new MemorySampleSource(origData, floatFormat);
                 Log($"✅ Original loaded to memory: {origData.Length} samples, format={originalFormat}");
+                waveformSeek.SetAudioData(origData, originalFormat.Channels);
 
                 if (!string.IsNullOrEmpty(_encodedFilePath) && File.Exists(_encodedFilePath))
                 {
@@ -3131,7 +3132,7 @@ namespace Codec_Playground_H
             _playgroundMixer = null;
             _originalMemorySource = null;
             timerTrackBarSeek.Stop();
-            trackBarSeek.Value = 0;
+            waveformSeek.Position = 0f;
             _currentPlaybackPosition = 0;
 
             labelEncoderSettingsReturnedByMI.Text = string.Empty;
@@ -3183,7 +3184,7 @@ namespace Codec_Playground_H
             _playgroundMixer = null;
             _originalMemorySource = null;
             timerTrackBarSeek.Stop();
-            trackBarSeek.Value = 0;
+            waveformSeek.Position = 0f;
             _currentPlaybackPosition = 0;
             _currentPlayerState = PlayerState.Stopped;
             labelEncoderSettingsReturnedByMI.Text = string.Empty;
@@ -3206,7 +3207,7 @@ namespace Codec_Playground_H
                 {
                     _currentPlayerState = PlayerState.Stopped;
                     buttonPlayPause.Text = "▶";
-                    trackBarSeek.Value = 0;
+                    waveformSeek.Position = 0f;
                     _currentPlaybackPosition = 0;
                     Log($"⏹️ Playback stopped");
                 });
@@ -3215,7 +3216,7 @@ namespace Codec_Playground_H
 
         private void TimerTrackBarSeek_Tick(object? sender, EventArgs e)
         {
-            if (_isDraggingTrackBarSeek || _waveOut == null) return;
+            if (_isDraggingWaveformSeek || _waveOut == null) return;
 
             if (_waveOut.PlaybackState is PlaybackState.Playing or PlaybackState.Paused)
             {
@@ -3228,11 +3229,11 @@ namespace Codec_Playground_H
                     if (totalLength > 0)
                     {
                         double progress = Math.Clamp((double)wavBytes / totalLength, 0, 1);
-                        trackBarSeek.Value = Math.Clamp((int)(progress * 1000), 0, 1000);
+                        waveformSeek.Position = (float)progress;
 
-                        if (trackBarSeek.Value >= 1000)
+                        if (progress >= 1.0)
                         {
-                            trackBarSeek.Value = 1000;
+                            waveformSeek.Position = 1f;
                             if (!_loopPlayback)
                             {
                                 Log($"⏹️ Playback reached end, stopping");
@@ -3254,40 +3255,18 @@ namespace Codec_Playground_H
                 }
             }
         }
-        private void TrackBarSeek_Scroll(object sender, EventArgs e)
+        private void WaveformSeek_MouseDown(object? sender, MouseEventArgs e)
         {
-            _isDraggingTrackBarSeek = true;
-            Log($"🖱️ Seek scroll: {trackBarSeek.Value}");
-        }
-        private void TrackBarSeek_MouseDown(object? sender, MouseEventArgs e)
-        {
-            Log($"🖱️ Seek mouse down at position: {e.X}");
-            if (sender is not TrackBar trackBar) return;
-
-            double thumbPosition = (double)(trackBar.Value - trackBar.Minimum) / (trackBar.Maximum - trackBar.Minimum);
-            int thumbX = (int)(thumbPosition * (trackBar.Width - 4));
-            int thumbHalfWidth = 8;
-
-            bool isThumbClick = Math.Abs(e.X - thumbX) <= thumbHalfWidth;
-            if (isThumbClick)
-            {
-                _isDraggingTrackBarSeek = true;
-                Log($"🖱️ Seek drag started (thumb click)");
-                return;
-            }
-
-            Log($"📍 Seek click on track bar (not thumb)");
-            double value = (double)e.X / (trackBar.Width - 4) * (trackBar.Maximum - trackBar.Minimum);
-            int newValue = (int)Math.Round(value);
-            newValue = Math.Clamp(newValue, trackBar.Minimum, trackBar.Maximum);
-            trackBar.Value = newValue;
+            if (e.Button != MouseButtons.Left) return;
+            Log($"🖱️ Waveform seek mouse down at X={e.X}");
 
             long totalLength = GetPlaybackTotalBytes();
             if (totalLength <= 0) return;
 
-            long newWavPosition = (long)(totalLength * Math.Clamp(trackBar.Value / 1000.0, 0, 1));
-            bool wasPlaying = _waveOut?.PlaybackState == PlaybackState.Playing;
+            float progress = Math.Clamp((float)e.X / waveformSeek.Width, 0f, 1f);
+            long newWavPosition = (long)(totalLength * progress);
 
+            bool wasPlaying = _waveOut?.PlaybackState == PlaybackState.Playing;
             if (wasPlaying)
             {
                 _waveOut?.Pause();
@@ -3297,7 +3276,7 @@ namespace Codec_Playground_H
             try
             {
                 SeekPlaybackToBytes(newWavPosition);
-                Log($"📍 Seek to position: {newWavPosition} bytes ({newWavPosition / (double)totalLength * 100:F1}%)");
+                Log($"📍 Seek to position: {newWavPosition} bytes ({progress * 100:F1}%)");
             }
             finally
             {
@@ -3308,37 +3287,47 @@ namespace Codec_Playground_H
                 }
             }
         }
-        private void TrackBarSeek_MouseUp(object sender, MouseEventArgs e)
+        private void WaveformSeek_MouseMove(object? sender, MouseEventArgs e)
         {
-            if (_isDraggingTrackBarSeek)
+            if (e.Button != MouseButtons.Left) return;
+
+            _isDraggingWaveformSeek = true;
+
+            // During drag: only update visual position, do NOT seek playback
+            float progress = Math.Clamp((float)e.X / waveformSeek.Width, 0f, 1f);
+            waveformSeek.Position = progress;
+        }
+        private void WaveformSeek_MouseUp(object? sender, MouseEventArgs e)
+        {
+            if (!_isDraggingWaveformSeek || e.Button != MouseButtons.Left) return;
+
+            _isDraggingWaveformSeek = false;
+            Log($"🖱️ Waveform seek mouse up at X={e.X}");
+
+            long totalLength = GetPlaybackTotalBytes();
+            if (totalLength <= 0) return;
+
+            float progress = Math.Clamp((float)e.X / waveformSeek.Width, 0f, 1f);
+            long newWavPosition = (long)(totalLength * progress);
+
+            bool wasPlaying = _waveOut?.PlaybackState == PlaybackState.Playing;
+            if (wasPlaying)
             {
-                Log($"🖱️ Seek mouse up: {trackBarSeek.Value}");
-                _isDraggingTrackBarSeek = false;
+                _waveOut?.Pause();
+                Log($"⏸️ Paused for seek");
+            }
 
-                long totalLength = GetPlaybackTotalBytes();
-                if (totalLength <= 0) return;
-
-                long newWavPosition = (long)(totalLength * Math.Clamp(trackBarSeek.Value / 1000.0, 0, 1));
-                bool wasPlaying = _waveOut?.PlaybackState == PlaybackState.Playing;
-
-                if (wasPlaying)
+            try
+            {
+                SeekPlaybackToBytes(newWavPosition);
+                Log($"📍 Seek to position: {newWavPosition} bytes ({progress * 100:F1}%)");
+            }
+            finally
+            {
+                if (wasPlaying && _waveOut != null)
                 {
-                    _waveOut?.Pause();
-                    Log($"⏸️ Paused for seek");
-                }
-
-                try
-                {
-                    SeekPlaybackToBytes(newWavPosition);
-                    Log($"📍 Seek to position: {newWavPosition} bytes ({newWavPosition / (double)totalLength * 100:F1}%)");
-                }
-                finally
-                {
-                    if (wasPlaying && _waveOut != null)
-                    {
-                        _waveOut.Play();
-                        Log($"▶️ Resumed after seek");
-                    }
+                    _waveOut.Play();
+                    Log($"▶️ Resumed after seek");
                 }
             }
         }

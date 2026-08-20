@@ -99,7 +99,7 @@
             buttonStop = new Button();
             buttonClearEncoders = new Button();
             buttonClearAudioFiles = new Button();
-            trackBarSeek = new TrackBar();
+            waveformSeek = new WaveformSeekBar();
             toolTip1 = new ToolTip(components);
             checkBoxCheckForUpdates = new CheckBox();
             timerTrackBarSeek = new System.Windows.Forms.Timer(components);
@@ -124,7 +124,6 @@
             panelAdditionalOptions_1_MP3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trackBarParameter_q_MP3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)trackBarSeek).BeginInit();
             tableLayoutPanelMain.SuspendLayout();
             panelPlayerControl.SuspendLayout();
             groupBoxPlayerControl.SuspendLayout();
@@ -880,18 +879,20 @@
             buttonClearAudioFiles.UseVisualStyleBackColor = true;
             buttonClearAudioFiles.Click += ButtonClear_Click;
             // 
-            // trackBarSeek
+            // waveformSeek
             // 
-            trackBarSeek.LargeChange = 1;
-            trackBarSeek.Location = new Point(68, 22);
-            trackBarSeek.Maximum = 1000;
-            trackBarSeek.Name = "trackBarSeek";
-            trackBarSeek.Size = new Size(346, 45);
-            trackBarSeek.TabIndex = 8;
-            trackBarSeek.TickStyle = TickStyle.None;
-            trackBarSeek.Scroll += TrackBarSeek_Scroll;
-            trackBarSeek.MouseDown += TrackBarSeek_MouseDown;
-            trackBarSeek.MouseUp += TrackBarSeek_MouseUp;
+            waveformSeek.BackColor = Color.Transparent;
+            waveformSeek.BorderColor = Color.Empty;
+            waveformSeek.Location = new Point(68, 20);
+            waveformSeek.Name = "waveformSeek";
+            waveformSeek.PlayedColor = SystemColors.HotTrack;
+            waveformSeek.ShowBorder = false;
+            waveformSeek.Size = new Size(346, 27);
+            waveformSeek.TabIndex = 8;
+            waveformSeek.UnplayedColor = SystemColors.ScrollBar;
+            waveformSeek.MouseDown += WaveformSeek_MouseDown;
+            waveformSeek.MouseMove += WaveformSeek_MouseMove;
+            waveformSeek.MouseUp += WaveformSeek_MouseUp;
             // 
             // checkBoxCheckForUpdates
             // 
@@ -907,7 +908,6 @@
             // 
             // timerTrackBarSeek
             // 
-            timerTrackBarSeek.Interval = 300;
             timerTrackBarSeek.Tick += TimerTrackBarSeek_Tick;
             // 
             // tableLayoutPanelMain
@@ -952,7 +952,7 @@
             groupBoxPlayerControl.Controls.Add(buttonLoopPlayback);
             groupBoxPlayerControl.Controls.Add(radioButtonPlayEncoded);
             groupBoxPlayerControl.Controls.Add(radioButtonPlayDifference);
-            groupBoxPlayerControl.Controls.Add(trackBarSeek);
+            groupBoxPlayerControl.Controls.Add(waveformSeek);
             groupBoxPlayerControl.Controls.Add(trackBarMixBalance);
             groupBoxPlayerControl.Location = new Point(3, 3);
             groupBoxPlayerControl.Name = "groupBoxPlayerControl";
@@ -1071,7 +1071,6 @@
             panelAdditionalOptions_1_MP3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)trackBarParameter_q_MP3).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).EndInit();
-            ((System.ComponentModel.ISupportInitialize)trackBarSeek).EndInit();
             tableLayoutPanelMain.ResumeLayout(false);
             panelPlayerControl.ResumeLayout(false);
             groupBoxPlayerControl.ResumeLayout(false);
@@ -1118,7 +1117,7 @@
         private Button buttonClearAudioFiles;
         private ColumnHeader columnHeaderAudioFilesDirectory;
         private ToolTip toolTip1;
-        private TrackBar trackBarSeek;
+        private WaveformSeekBar waveformSeek;
         private System.Windows.Forms.Timer timerTrackBarSeek;
         private RadioButton radioButtonPlayDifference;
         private RadioButton radioButtonPlayEncoded;
