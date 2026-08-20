@@ -1288,7 +1288,8 @@ namespace Codec_Playground_H
                 disposableSource?.Dispose();
             }
         }
-        private async Task<string> EncodeToTempFileAsync(string inputPath, string cacheKey, string uiArgs, string presetArgs, bool isPreset, CancellationToken ct, long requestVersion = -1)
+        private async Task<string>
+            EncodeToTempFileAsync (string inputPath, string cacheKey, string uiArgs, string presetArgs, bool isPreset, CancellationToken ct, long requestVersion = -1)
         {
             if (string.IsNullOrEmpty(_selectedEncoderPath))
                 throw new InvalidOperationException("Encoder is not selected.");
@@ -1397,6 +1398,7 @@ namespace Codec_Playground_H
         }
         private async Task<(string EncodedPath, float[]? PreloadedSamples)> EncodeFileAsync(string inputPath, string cacheKey, string uiArgs, string presetArgs, bool isPreset, CancellationToken ct)
         {
+            // Initialize result variables
             string resultEncodedPath = string.Empty;
             float[]? resultPreloadedSamples = null;
 
@@ -1407,77 +1409,106 @@ namespace Codec_Playground_H
             Log($"📌 Encoder path: {encoderPath}");
             string tempEncodedFile = Path.Combine(_tempFolder, $"{cacheKey}.mp3");
             Log($"📁 Output file: {tempEncodedFile}");
+
             if (File.Exists(tempEncodedFile))
             {
                 Log($"ℹ️ Output file already exists: {tempEncodedFile}");
+
+                // Check cache and calculate delay INSIDE lock (synchronous operations only)
+                bool isInCache = false;
+                int cachedDelay = 0;
+                bool needsDelayCalc = false;
+                int bitrateForDelay = 0;
+
                 lock (_cacheLock)
                 {
                     if (_encodedCache.ContainsKey(cacheKey))
                     {
+                        isInCache = true;
                         Log($"📦 File already exists and cached: {Path.GetFileName(tempEncodedFile)}");
                         _encodedFilePath = tempEncodedFile;
-                        if (_delayCache.TryGetValue(cacheKey, out int cachedDelay))
+                        if (_delayCache.TryGetValue(cacheKey, out cachedDelay))
                         {
                             Log($"📦 Using cached delay: {cachedDelay} samples");
                         }
                         else
                         {
-                            try
-                            {
-                                Log($"🔄 Calculating delay for existing file");
-                                int bitrate = 0;
-                                using (var mpegReader = new MediaFoundationReader(tempEncodedFile))
-                                {
-                                    double duration = mpegReader.TotalTime.TotalSeconds;
-                                    if (duration > 0)
-                                        bitrate = (int)((new FileInfo(tempEncodedFile).Length * 8) / duration / 1000);
-                                    Log($"📊 MP3 duration: {duration:F2}s, bitrate: {bitrate} kbps");
-                                }
-                                int delay = CalculateCodecDelay(inputPath, tempEncodedFile, bitrate);
-                                _delayCache[cacheKey] = delay;
-                                Log($"🔧 Calculated and cached delay: {delay} samples");
-                            }
-                            catch (Exception ex)
-                            {
-                                Log($"⚠️ Failed to calculate delay: {ex.Message}");
-                            }
+                            needsDelayCalc = true;
                         }
-                        Invoke(() =>
-                        {
-                            _encodedFilePath = tempEncodedFile;
-                            _encodingStatus = EncodingStatus.Completed;
-                            string currentUiCacheKey = "";
-                            if (!string.IsNullOrEmpty(_originalFilePath) && !string.IsNullOrEmpty(_selectedEncoderPath))
-                                currentUiCacheKey = GenerateCacheFileNameAndCacheKey(_originalFilePath, _selectedEncoderPath, out _, out _, out _);
-                            bool settingsMatch = (currentUiCacheKey == cacheKey);
-                            _needsReencoding = !settingsMatch;
-                            _currentCacheKey = cacheKey;
-                            Log($"✅ Encoding completed (existing file). Settings match: {settingsMatch}");
-                            UpdateEncodingUI();
-                            if (_pendingPlayAfterEncode)
-                            {
-                                _pendingPlayAfterEncode = false;
-                                Log($"▶️ Starting playback after encoding");
-
-                                InitializePlayback(preloadedSamples: null);
-                                PlayDual();
-                                UpdateEncoderSettingsReturnedByMILabel();
-                                if (!settingsMatch)
-                                {
-                                    Log("⚙️ Settings changed during encoding, scheduling seamless swap to new settings");
-                                    _currentCacheKey = currentUiCacheKey;
-                                    ScheduleSeamlessSwap();
-                                }
-                            }
-                        });
-                        return (tempEncodedFile, null);
                     }
                     else
                     {
                         Log($"⚠️ File exists but not in cache, will be added");
                     }
                 }
+
+                // Calculate delay OUTSIDE lock (may involve file I/O)
+                if (isInCache && needsDelayCalc)
+                {
+                    try
+                    {
+                        Log($"🔄 Calculating delay for existing file");
+                        using (var mpegReader = new MediaFoundationReader(tempEncodedFile))
+                        {
+                            double duration = mpegReader.TotalTime.TotalSeconds;
+                            if (duration > 0)
+                                bitrateForDelay = (int)((new FileInfo(tempEncodedFile).Length * 8) / duration / 1000);
+                            Log($"📊 MP3 duration: {duration:F2}s, bitrate: {bitrateForDelay} kbps");
+                        }
+                        cachedDelay = CalculateCodecDelay(inputPath, tempEncodedFile, bitrateForDelay);
+
+                        // Store calculated delay back into cache under lock
+                        lock (_cacheLock)
+                        {
+                            _delayCache[cacheKey] = cachedDelay;
+                        }
+                        Log($"🔧 Calculated and cached delay: {cachedDelay} samples");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"⚠️ Failed to calculate delay: {ex.Message}");
+                    }
+                }
+
+                // Compute current UI cache key BEFORE Invoke (async, outside lock)
+                string currentUiCacheKeyExisting = "";
+                if (!string.IsNullOrEmpty(_originalFilePath) && !string.IsNullOrEmpty(_selectedEncoderPath))
+                {
+                    var (ck, _, _, _) = await GenerateCacheFileNameAndCacheKeyAsync(_originalFilePath, _selectedEncoderPath);
+                    currentUiCacheKeyExisting = ck;
+                }
+
+                // Only now enter Invoke with all data ready
+                if (isInCache)
+                {
+                    Invoke(() =>
+                    {
+                        _encodedFilePath = tempEncodedFile;
+                        _encodingStatus = EncodingStatus.Completed;
+                        bool settingsMatch = (currentUiCacheKeyExisting == cacheKey);
+                        _needsReencoding = !settingsMatch;
+                        _currentCacheKey = cacheKey;
+                        Log($"✅ Encoding completed (existing file). Settings match: {settingsMatch}");
+                        UpdateEncodingUI();
+                        if (_pendingPlayAfterEncode)
+                        {
+                            _pendingPlayAfterEncode = false;
+                            Log($"▶️ Starting playback after encoding");
+                            InitializePlayback(preloadedSamples: null);
+                            PlayDual();
+                            UpdateEncoderSettingsReturnedByMILabel();
+                            if (!settingsMatch)
+                            {
+                                Log("⚙️ Settings changed during encoding, scheduling seamless swap to new settings");
+                                _currentCacheKey = currentUiCacheKeyExisting;
+                                ScheduleSeamlessSwap();
+                            }
+                        }
+                    });
+                    return (tempEncodedFile, null);
+                }
             }
+
             string? tempPreEncodeWav = null;
             string lameInputPath = inputPath;
             Process? process = null;
@@ -1488,6 +1519,7 @@ namespace Codec_Playground_H
                 int targetBits = 16;
                 Log($"📄 Input extension: {ext}");
 
+                // Variable to hold preloaded samples during conversion
                 float[]? convertedOriginalSamples = null;
 
                 if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
@@ -1532,6 +1564,7 @@ namespace Codec_Playground_H
                     targetBits = 16;
                     Log($"📌 {ext} → converting to 16-bit PCM WAV");
                 }
+
                 if (needsConversion)
                 {
                     tempPreEncodeWav = Path.Combine(_tempFolder, $"preencode_{Guid.NewGuid()}.wav");
@@ -1564,7 +1597,8 @@ namespace Codec_Playground_H
                             Log($"📊 Source: {sampleRate}Hz, {channels}ch");
                         }
 
-                        // Read all samples into memory during conversion
+                        // OPTIMIZATION: Read all samples into memory ONCE during conversion
+                        // This avoids reading the original file a second time in InitializePlayback
                         convertedOriginalSamples = ReadAllSamples(sourceProvider);
                         var convertedFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
                         Log($"💾 Original samples loaded during conversion: {convertedOriginalSamples.Length} samples");
@@ -1614,6 +1648,7 @@ namespace Codec_Playground_H
                     // Store preloaded samples to return later
                     resultPreloadedSamples = convertedOriginalSamples;
                 }
+
                 Log($"📁 Encoding: {lameInputPath} → {Path.GetFileName(tempEncodedFile)}");
                 string args = BuildLameArguments(lameInputPath, tempEncodedFile, uiArgs, presetArgs, isPreset);
                 Log($"🔧 LAME arguments: {args}");
@@ -1692,6 +1727,14 @@ namespace Codec_Playground_H
                 string encoderInfo = GetEncoderSettingsFromFile(tempEncodedFile);
                 Log($"📊 MediaInfo: {encoderInfo}");
 
+                // Compute current UI cache key BEFORE Invoke (async, outside lock)
+                string currentUiCacheKeyCompleted = "";
+                if (!string.IsNullOrEmpty(_originalFilePath) && !string.IsNullOrEmpty(_selectedEncoderPath))
+                {
+                    var (ck, _, _, _) = await GenerateCacheFileNameAndCacheKeyAsync(_originalFilePath, _selectedEncoderPath);
+                    currentUiCacheKeyCompleted = ck;
+                }
+
                 // Capture preloaded samples for use inside Invoke lambda
                 float[]? samplesForInvoke = resultPreloadedSamples;
 
@@ -1699,10 +1742,7 @@ namespace Codec_Playground_H
                 {
                     _encodedFilePath = tempEncodedFile;
                     _encodingStatus = EncodingStatus.Completed;
-                    string currentUiCacheKey = "";
-                    if (!string.IsNullOrEmpty(_originalFilePath) && !string.IsNullOrEmpty(_selectedEncoderPath))
-                        currentUiCacheKey = GenerateCacheFileNameAndCacheKey(_originalFilePath, _selectedEncoderPath, out _, out _, out _);
-                    bool settingsMatch = (currentUiCacheKey == cacheKey);
+                    bool settingsMatch = (currentUiCacheKeyCompleted == cacheKey);
                     _needsReencoding = !settingsMatch;
                     _currentCacheKey = cacheKey;
                     Log($"✅ Encoding completed successfully. Settings match: {settingsMatch}");
@@ -1718,7 +1758,7 @@ namespace Codec_Playground_H
                         if (!settingsMatch)
                         {
                             Log("⚙️ Settings changed during encoding, scheduling seamless swap to new settings");
-                            _currentCacheKey = currentUiCacheKey;
+                            _currentCacheKey = currentUiCacheKeyCompleted;
                             ScheduleSeamlessSwap();
                         }
                     }
@@ -1764,7 +1804,7 @@ namespace Codec_Playground_H
                 Log($"🔚 EncodeFileAsync finished");
             }
         }
-        private void StartEncodingForPlay(string originalFilePath)
+        private async void StartEncodingForPlay(string originalFilePath)
         {
             Log($"▶️ StartEncodingForPlay: {Path.GetFileName(originalFilePath)}");
             if (string.IsNullOrEmpty(_selectedEncoderPath))
@@ -1774,7 +1814,7 @@ namespace Codec_Playground_H
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            string cacheKey = GenerateCacheFileNameAndCacheKey(originalFilePath, _selectedEncoderPath, out string uiArgs, out string presetArgs, out bool isPreset);
+            var (cacheKey, uiArgs, presetArgs, isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(originalFilePath, _selectedEncoderPath);
             _currentCacheKey = cacheKey;
             Log($"🔑 Cache key: {cacheKey}");
             if (TryGetFromCache(cacheKey, out string? cachedFile, out int cachedDelay))
@@ -1804,8 +1844,6 @@ namespace Codec_Playground_H
                 Log($"🚀 Encoding task started");
                 try
                 {
-                    // EncodeFileAsync now returns a tuple instead of using out parameters
-                    // Playback initialization with preloaded samples happens inside EncodeFileAsync via Invoke
                     await EncodeFileAsync(originalFilePath, cacheKey, uiArgs, presetArgs, isPreset, token);
                 }
                 catch (OperationCanceledException)
@@ -1837,7 +1875,7 @@ namespace Codec_Playground_H
                 }
             });
         }
-        private void StartFileSwitchEncoding(string newFilePath)
+        private async void StartFileSwitchEncoding(string newFilePath)
         {
             Log($"▶️ StartFileSwitchEncoding: {Path.GetFileName(newFilePath)}");
             if (string.IsNullOrEmpty(_selectedEncoderPath))
@@ -1846,7 +1884,7 @@ namespace Codec_Playground_H
                 return;
             }
             long myVersion = _seamlessRequestVersion; // Already incremented by caller
-            string cacheKey = GenerateCacheFileNameAndCacheKey(newFilePath, _selectedEncoderPath, out string uiArgs, out string presetArgs, out bool isPreset);
+            var (cacheKey, uiArgs, presetArgs, isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(newFilePath, _selectedEncoderPath);
             _currentCacheKey = cacheKey;
             Log($"🔑 File switch cache key: {cacheKey}");
             // Fast path: cache hit — instant switch
@@ -1949,7 +1987,6 @@ namespace Codec_Playground_H
                 }
             });
         }
-
         private void UpdateEncodingUI()
         {
             if (InvokeRequired) { Invoke(UpdateEncodingUI); return; }
@@ -1996,26 +2033,24 @@ namespace Codec_Playground_H
                     break;
             }
         }
-        private void OnSettingsChanged()
+        private async void OnSettingsChanged()
         {
             if (_isLoadingSettings)
             {
                 Log($"ℹ️ Settings changed during load, ignoring");
                 return;
             }
-
             _needsReencoding = true;
             _encodedFilePath = null;
             _currentCacheKey = null;
             Log("⚙️ Settings changed, will use cached version if available");
-
             if (_waveOut != null && _playgroundMixer != null &&
                 _waveOut.PlaybackState != PlaybackState.Stopped)
             {
                 ScheduleSeamlessSwap();
             }
         }
-        private void ScheduleSeamlessSwap()
+        private async void ScheduleSeamlessSwap()
         {
             if (_isLoadingSettings)
             {
@@ -2023,29 +2058,43 @@ namespace Codec_Playground_H
                 return;
             }
 
-            Log("⚡ Starting seamless swap immediately (no debounce)");
-            StartSeamlessSwap();
+            if (string.IsNullOrEmpty(_originalFilePath) || string.IsNullOrEmpty(_selectedEncoderPath))
+            {
+                Log("⚠️ ScheduleSeamlessSwap: no original file or encoder, skipping");
+                return;
+            }
+
+            // Capture paths before any await to avoid race conditions
+            string audioPath = _originalFilePath;
+            string encoderPath = _selectedEncoderPath;
+
+            // Generate cache key asynchronously — UI thread is NOT blocked
+            var (cacheKey, uiArgs, presetArgs, isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(audioPath, encoderPath);
+
+            // After await we may be back on UI thread, but StartSeamlessSwap does not block
+            StartSeamlessSwap(cacheKey, uiArgs, presetArgs, isPreset);
         }
-        private void StartSeamlessSwap()
+        private void StartSeamlessSwap(string cacheKey, string uiArgs, string presetArgs, bool isPreset)
         {
             if (_waveOut == null || _playgroundMixer == null || _waveOut.PlaybackState == PlaybackState.Stopped)
             {
                 Log("⚠️ Seamless swap skipped: playback not active");
                 return;
             }
-            if (string.IsNullOrEmpty(_originalFilePath) || string.IsNullOrEmpty(_selectedEncoderPath))
-            {
-                Log("⚠️ Seamless swap skipped: no original file or encoder");
-                return;
-            }
-            string cacheKey = GenerateCacheFileNameAndCacheKey(_originalFilePath, _selectedEncoderPath, out string uiArgs, out string presetArgs, out bool isPreset);
+
             _currentCacheKey = cacheKey;
             Log($"🔁 Seamless swap target key: {cacheKey}");
 
             // Bump version but do NOT cancel previous tasks
             long myVersion = Interlocked.Increment(ref _seamlessRequestVersion);
             CancellationToken token = _seamlessCts!.Token;
-            string originalPath = _originalFilePath;
+            string? originalPath = _originalFilePath;
+
+            if (string.IsNullOrEmpty(originalPath))
+            {
+                Log("⚠️ Seamless swap skipped: original path became null");
+                return;
+            }
 
             // Fast path: cache hit — swap without progress bar
             if (TryGetFromCache(cacheKey, out string? cachedFile, out int cachedDelay))
@@ -2102,6 +2151,7 @@ namespace Codec_Playground_H
             _isSeamlessReencode = true;
             _encodingStatus = EncodingStatus.Queued;
             UpdateEncodingUI();
+
             _ = Task.Run(async () =>
             {
                 try
@@ -2135,6 +2185,7 @@ namespace Codec_Playground_H
                         Log($"📦 Encoded and cached, swap skipped ({(myVersion != _seamlessRequestVersion ? "superseded" : "mixer unavailable")})");
                     }
                     if (token.IsCancellationRequested) return;
+
                     Invoke(() =>
                     {
                         if (myVersion != _seamlessRequestVersion)
@@ -3438,16 +3489,36 @@ namespace Codec_Playground_H
         }
 
         // Cache
-        private string GenerateCacheFileNameAndCacheKey(string audioPath, string encoderPath, out string outUiArgs, out string outPresetArgs, out bool outIsPreset)
+        private async Task<(string CacheKey, string UiArgs, string PresetArgs, bool IsPreset)>
+            GenerateCacheFileNameAndCacheKeyAsync(string audioPath, string encoderPath)
         {
-            Log($"🔑 Generating cache key for {Path.GetFileName(audioPath)}");
+            // Capture UI state on UI thread via Invoke to avoid cross-thread exceptions
+            // This is safe because Invoke blocks until the delegate completes,
+            // and we only read control properties (fast operation)
             string presetArgs = "";
             bool isPresetSelected = false;
             string uiArgs = "";
 
-            // Capture UI state atomically
-            Invoke(() =>
+            if (InvokeRequired)
             {
+                Invoke(() =>
+                {
+                    if (radioButtonUserPreset1.Checked) { presetArgs = textBoxUserPreset1.Text; isPresetSelected = true; }
+                    else if (radioButtonUserPreset2.Checked) { presetArgs = textBoxUserPreset2.Text; isPresetSelected = true; }
+                    else if (radioButtonUserPreset3.Checked) { presetArgs = textBoxUserPreset3.Text; isPresetSelected = true; }
+                    else if (radioButtonUserPreset4.Checked) { presetArgs = textBoxUserPreset4.Text; isPresetSelected = true; }
+                    else if (radioButtonUserPreset5.Checked) { presetArgs = textBoxUserPreset5.Text; isPresetSelected = true; }
+                    else if (radioButtonUserPreset6.Checked) { presetArgs = textBoxUserPreset6.Text; isPresetSelected = true; }
+
+                    if (!isPresetSelected)
+                    {
+                        uiArgs = GetCurrentCommandLineArgs();
+                    }
+                });
+            }
+            else
+            {
+                // Already on UI thread — direct access is safe
                 if (radioButtonUserPreset1.Checked) { presetArgs = textBoxUserPreset1.Text; isPresetSelected = true; }
                 else if (radioButtonUserPreset2.Checked) { presetArgs = textBoxUserPreset2.Text; isPresetSelected = true; }
                 else if (radioButtonUserPreset3.Checked) { presetArgs = textBoxUserPreset3.Text; isPresetSelected = true; }
@@ -3459,69 +3530,77 @@ namespace Codec_Playground_H
                 {
                     uiArgs = GetCurrentCommandLineArgs();
                 }
+            }
+
+            // Offload heavy work (hashing, GetEncoderInfo) to background thread
+            string cacheKey = await Task.Run(() =>
+            {
+                Log($"🔑 Generating cache key for {Path.GetFileName(audioPath)}");
+
+                string fileNameWithExt = Path.GetFileName(audioPath);
+                foreach (char c in Path.GetInvalidFileNameChars()) fileNameWithExt = fileNameWithExt.Replace(c, '_');
+                if (string.IsNullOrEmpty(fileNameWithExt)) fileNameWithExt = "audio.wav";
+
+                string encoderName = Path.GetFileNameWithoutExtension(encoderPath);
+                if (string.IsNullOrEmpty(encoderName)) encoderName = "encoder";
+
+                string encoderVersion = "unknown";
+                try
+                {
+                    (string Name, string Version) info = GetEncoderInfo(encoderPath);
+                    if (!string.IsNullOrEmpty(info.Version) && info.Version != "Unknown")
+                    {
+                        encoderVersion = info.Version;
+                        foreach (char c in Path.GetInvalidFileNameChars()) encoderVersion = encoderVersion.Replace(c, '_');
+                        encoderVersion = encoderVersion.Replace(' ', '_').Replace('.', '_');
+                        if (encoderVersion.Length > 70) encoderVersion = encoderVersion[..70];
+                    }
+                }
+                catch { }
+
+                string encoderFullName = $"{encoderName}_{encoderVersion}";
+
+                if (isPresetSelected)
+                {
+                    string cleanPresetArgs = presetArgs;
+                    foreach (char c in Path.GetInvalidFileNameChars()) cleanPresetArgs = cleanPresetArgs.Replace(c, '_');
+                    cleanPresetArgs = cleanPresetArgs.Replace(' ', '_').Replace('"', '_');
+                    if (cleanPresetArgs.Length > 50) cleanPresetArgs = cleanPresetArgs[..50];
+                    if (string.IsNullOrEmpty(cleanPresetArgs)) cleanPresetArgs = "empty";
+
+                    string readableName = $"{fileNameWithExt}_{encoderFullName}_PRESET_{cleanPresetArgs}";
+                    if (readableName.Length > 130) readableName = readableName[..130];
+
+                    StringBuilder settings = new();
+                    _ = settings.Append($"{audioPath}|{encoderPath}|{encoderVersion}|PRESET|{presetArgs}");
+                    byte[] bytes = Encoding.UTF8.GetBytes(settings.ToString());
+                    byte[] hash = SHA256.HashData(bytes);
+                    string hashString = Convert.ToBase64String(hash).Replace("/", "_").Replace("+", "-")[..4];
+
+                    string result = $"{readableName}____{hashString}";
+                    Log($"🔑 Generated cache key from preset: {result}");
+                    return result;
+                }
+
+                string cleanUiArgs = uiArgs.Replace(" ", "_").Replace("-", "");
+                foreach (char c in Path.GetInvalidFileNameChars()) cleanUiArgs = cleanUiArgs.Replace(c, '_');
+                if (string.IsNullOrEmpty(cleanUiArgs)) cleanUiArgs = "default";
+
+                string readableName2 = $"{fileNameWithExt}_{encoderFullName}_{cleanUiArgs}";
+                if (readableName2.Length > 130) readableName2 = readableName2[..130];
+
+                StringBuilder settings2 = new();
+                _ = settings2.Append($"{audioPath}|{encoderPath}|{encoderVersion}|{uiArgs}");
+                byte[] bytes2 = Encoding.UTF8.GetBytes(settings2.ToString());
+                byte[] hash2 = SHA256.HashData(bytes2);
+                string hashString2 = Convert.ToBase64String(hash2).Replace("/", "_").Replace("+", "-")[..4];
+
+                string result2 = $"{readableName2}____{hashString2}";
+                Log($"🔑 Generated cache key: {result2}");
+                return result2;
             });
 
-            outUiArgs = uiArgs;
-            outPresetArgs = presetArgs;
-            outIsPreset = isPresetSelected;
-
-            string fileNameWithExt = Path.GetFileName(audioPath);
-            foreach (char c in Path.GetInvalidFileNameChars()) fileNameWithExt = fileNameWithExt.Replace(c, '_');
-            if (string.IsNullOrEmpty(fileNameWithExt)) fileNameWithExt = "audio.wav";
-
-            string encoderName = Path.GetFileNameWithoutExtension(encoderPath);
-            if (string.IsNullOrEmpty(encoderName)) encoderName = "encoder";
-            string encoderVersion = "unknown";
-            try
-            {
-                (string Name, string Version) info = GetEncoderInfo(encoderPath);
-                if (!string.IsNullOrEmpty(info.Version) && info.Version != "Unknown")
-                {
-                    encoderVersion = info.Version;
-                    foreach (char c in Path.GetInvalidFileNameChars()) encoderVersion = encoderVersion.Replace(c, '_');
-                    encoderVersion = encoderVersion.Replace(' ', '_').Replace('.', '_');
-                    if (encoderVersion.Length > 70) encoderVersion = encoderVersion[..70];
-                }
-            }
-            catch { }
-            string encoderFullName = $"{encoderName}_{encoderVersion}";
-
-            if (isPresetSelected)
-            {
-                string cleanPresetArgs = presetArgs;
-                foreach (char c in Path.GetInvalidFileNameChars()) cleanPresetArgs = cleanPresetArgs.Replace(c, '_');
-                cleanPresetArgs = cleanPresetArgs.Replace(' ', '_').Replace('"', '_');
-                if (cleanPresetArgs.Length > 50) cleanPresetArgs = cleanPresetArgs[..50];
-                if (string.IsNullOrEmpty(cleanPresetArgs)) cleanPresetArgs = "empty";
-
-                string readableName = $"{fileNameWithExt}_{encoderFullName}_PRESET_{cleanPresetArgs}";
-                if (readableName.Length > 130) readableName = readableName[..130];
-
-                StringBuilder settings = new();
-                _ = settings.Append($"{audioPath}|{encoderPath}|{encoderVersion}|PRESET|{presetArgs}");
-                byte[] bytes = Encoding.UTF8.GetBytes(settings.ToString());
-                byte[] hash = SHA256.HashData(bytes);
-                string hashString = Convert.ToBase64String(hash).Replace("/", "_").Replace("+", "-")[..4];
-                string result = $"{readableName}____{hashString}";
-                Log($"🔑 Generated cache key from preset: {result}");
-                return result;
-            }
-
-            string cleanUiArgs = uiArgs.Replace(" ", "_").Replace("-", "");
-            foreach (char c in Path.GetInvalidFileNameChars()) cleanUiArgs = cleanUiArgs.Replace(c, '_');
-            if (string.IsNullOrEmpty(cleanUiArgs)) cleanUiArgs = "default";
-
-            string readableName2 = $"{fileNameWithExt}_{encoderFullName}_{cleanUiArgs}";
-            if (readableName2.Length > 130) readableName2 = readableName2[..130];
-
-            StringBuilder settings2 = new();
-            _ = settings2.Append($"{audioPath}|{encoderPath}|{encoderVersion}|{uiArgs}");
-            byte[] bytes2 = Encoding.UTF8.GetBytes(settings2.ToString());
-            byte[] hash2 = SHA256.HashData(bytes2);
-            string hashString2 = Convert.ToBase64String(hash2).Replace("/", "_").Replace("+", "-")[..4];
-            string result2 = $"{readableName2}____{hashString2}";
-            Log($"🔑 Generated cache key: {result2}");
-            return result2;
+            return (cacheKey, uiArgs, presetArgs, isPresetSelected);
         }
         private void AddToCache(string key, string filePath, int delay)
         {
