@@ -70,7 +70,6 @@ namespace Codec_Playground_H
         private bool _loopPlayback = true;
         private long _currentPlaybackPosition = 0;
 
-        private System.Windows.Forms.Timer? _settingsDebounceTimer;
         private CancellationTokenSource? _seamlessCts;
         private bool _isSeamlessReencode = false;
         private string? _activeEncodedCacheKey = null;
@@ -1990,18 +1989,13 @@ namespace Codec_Playground_H
         }
         private void ScheduleSeamlessSwap()
         {
-            if (_settingsDebounceTimer == null)
+            if (_isLoadingSettings)
             {
-                _settingsDebounceTimer = new System.Windows.Forms.Timer { Interval = 10 };
-                _settingsDebounceTimer.Tick += OnSeamlessDebounceTick;
+                Log("ℹ️ ScheduleSeamlessSwap: loading settings, skipping");
+                return;
             }
-            _settingsDebounceTimer.Stop();
-            _settingsDebounceTimer.Start();
-            Log("⏱️ Seamless swap scheduled (debounce)");
-        }
-        private void OnSeamlessDebounceTick(object? sender, EventArgs e)
-        {
-            _settingsDebounceTimer?.Stop();
+
+            Log("⚡ Starting seamless swap immediately (no debounce)");
             StartSeamlessSwap();
         }
         private void StartSeamlessSwap()
@@ -3125,8 +3119,6 @@ namespace Codec_Playground_H
         {
             Log($"🔄 PausePlaybackForFileSwitch called");
 
-            _settingsDebounceTimer?.Stop();
-
             if (_waveOut != null)
             {
                 Log($"⏸️ Stopping and disposing waveOut for file switch");
@@ -3162,7 +3154,6 @@ namespace Codec_Playground_H
         {
             Log($"⏹️ StopDualPlayback called");
             _pendingPlayAfterEncode = false;
-            _settingsDebounceTimer?.Stop();
 
             try
             {
