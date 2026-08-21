@@ -4,6 +4,7 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System.Diagnostics;
 using System.Numerics;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -106,6 +107,7 @@ namespace Codec_Playground_H
         }
 
         // Log and Utils
+        [Conditional("DEBUG")]
         private static void Log(string message)
         {
             string logMsg = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
@@ -213,7 +215,7 @@ namespace Codec_Playground_H
                 }
                 else
                 {
-                    var bounds = RestoreBounds;
+                    Rectangle bounds = RestoreBounds;
                     _settings.Window.Width = bounds.Width;
                     _settings.Window.Height = bounds.Height;
                     _settings.Window.X = bounds.X;
@@ -300,7 +302,7 @@ namespace Codec_Playground_H
 
                         if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                         {
-                            using var wavReader = new WaveFileReader(audioPath);
+                            using WaveFileReader wavReader = new(audioPath);
                             channels = wavReader.WaveFormat.Channels;
                             bitsPerSample = wavReader.WaveFormat.BitsPerSample;
                             sampleRate = wavReader.WaveFormat.SampleRate;
@@ -309,12 +311,12 @@ namespace Codec_Playground_H
                         }
                         else if (ext.Equals(".flac", StringComparison.OrdinalIgnoreCase))
                         {
-                            var flacInfo = ReadFlacStreamInfo(audioPath);
-                            channels = flacInfo.Channels;
-                            bitsPerSample = flacInfo.BitsPerSample;
-                            sampleRate = flacInfo.SampleRate;
-                            durationSec = flacInfo.TotalSamples > 0 && flacInfo.SampleRate > 0
-                                ? (double)flacInfo.TotalSamples / flacInfo.SampleRate
+                            (int Channels, int BitsPerSample, int SampleRate, long TotalSamples) = ReadFlacStreamInfo(audioPath);
+                            channels = Channels;
+                            bitsPerSample = BitsPerSample;
+                            sampleRate = SampleRate;
+                            durationSec = TotalSamples > 0 && SampleRate > 0
+                                ? (double)TotalSamples / SampleRate
                                 : 0;
                             Log($"📊 FLAC info: {channels}ch, {bitsPerSample}bit, {sampleRate}Hz, {durationSec:F1}s");
                         }
@@ -417,8 +419,8 @@ namespace Codec_Playground_H
                 trackBarMixBalance.Visible = showBalance;
                 if (showBalance)
                 {
-                    int origPct = (int)((1f - trackBarMixBalance.Value / 100f) * 100);
-                    int encPct = (int)((trackBarMixBalance.Value / 100f) * 100);
+                    int origPct = (int)((1f - (trackBarMixBalance.Value / 100f)) * 100);
+                    int encPct = (int)(trackBarMixBalance.Value / 100f * 100);
                     labelMixBalance.Text = $"{origPct} / {encPct}";
                 }
 
@@ -449,7 +451,7 @@ namespace Codec_Playground_H
                 {
                     int width = Math.Max(_settings.Window.Width, MinimumSize.Width);
                     int height = Math.Max(_settings.Window.Height, MinimumSize.Height);
-                    var screen = Screen.FromPoint(new Point(_settings.Window.X, _settings.Window.Y));
+                    Screen screen = Screen.FromPoint(new Point(_settings.Window.X, _settings.Window.Y));
                     if (!screen.Bounds.Contains(_settings.Window.X, _settings.Window.Y))
                     {
                         Width = width;
@@ -487,7 +489,7 @@ namespace Codec_Playground_H
                 if (!Directory.Exists(_tempFolder))
                 {
                     Log($"📁 Creating temp folder: {_tempFolder}");
-                    Directory.CreateDirectory(_tempFolder);
+                    _ = Directory.CreateDirectory(_tempFolder);
                     Log($"✅ Temp folder created: {_tempFolder}");
                 }
                 else
@@ -504,20 +506,20 @@ namespace Codec_Playground_H
         private void EnsureMediaInfoDllExists()
         {
             string dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MediaInfo.dll");
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            using var stream = assembly.GetManifestResourceStream("Codec_Playground_H.MediaInfo.dll");
+            Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using Stream? stream = assembly.GetManifestResourceStream("Codec_Playground_H.MediaInfo.dll");
             if (stream == null)
             {
                 Log("⚠️ MediaInfo.dll resource not found in assembly.");
                 return;
             }
-            using var md5 = MD5.Create();
+            using MD5 md5 = MD5.Create();
             byte[] resourceHash = md5.ComputeHash(stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            _ = stream.Seek(0, SeekOrigin.Begin);
 
             if (File.Exists(dllPath))
             {
-                using var fileStream = File.OpenRead(dllPath);
+                using FileStream fileStream = File.OpenRead(dllPath);
                 byte[] fileHash = md5.ComputeHash(fileStream);
                 if (resourceHash.SequenceEqual(fileHash))
                 {
@@ -529,14 +531,14 @@ namespace Codec_Playground_H
             }
             try
             {
-                using var fileStream = File.Create(dllPath);
+                using FileStream fileStream = File.Create(dllPath);
                 stream.CopyTo(fileStream);
                 Log($"✅ MediaInfo.dll extracted to {dllPath}");
             }
             catch (Exception ex)
             {
                 Log($"❌ Failed to extract MediaInfo.dll: {ex.Message}");
-                MessageBox.Show("Failed to extract MediaInfo.dll. Some features may not work.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _ = MessageBox.Show("Failed to extract MediaInfo.dll. Some features may not work.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -544,7 +546,7 @@ namespace Codec_Playground_H
         private (string Name, string Version) GetEncoderInfo(string encoderPath)
         {
             // Fast path: return cached result without spawning a process
-            if (_encoderInfoCache.TryGet(encoderPath, out var cached))
+            if (_encoderInfoCache.TryGet(encoderPath, out (string Name, string Version) cached))
             {
                 return cached;
             }
@@ -614,7 +616,7 @@ namespace Codec_Playground_H
                     }
                 }
                 Log($"📊 Result: name={name}, version={version}");
-                var result = (name, version);
+                (string name, string version) result = (name, version);
                 _encoderInfoCache.Add(encoderPath, name, version);
                 return result;
             }
@@ -701,7 +703,7 @@ namespace Codec_Playground_H
                 {
                     try
                     {
-                        var exeFiles = Directory.GetFiles(path, "*.exe", SearchOption.AllDirectories);
+                        string[] exeFiles = Directory.GetFiles(path, "*.exe", SearchOption.AllDirectories);
                         Log($"📁 Found {exeFiles.Length} .exe files in folder: {path}");
                         foreach (string exePath in exeFiles)
                         {
@@ -748,7 +750,12 @@ namespace Codec_Playground_H
             }
 
             foreach (ListViewItem item in listViewEncoders.Items)
-                if (item != e.Item) item.Checked = false;
+            {
+                if (item != e.Item)
+                {
+                    item.Checked = false;
+                }
+            }
 
             _selectedEncoderPath = newPath;
             _needsReencoding = true;
@@ -812,8 +819,8 @@ namespace Codec_Playground_H
         {
             Log($"🔍 Reading FLAC STREAMINFO from: {filePath}");
 
-            using var fs = File.OpenRead(filePath);
-            using var br = new BinaryReader(fs);
+            using FileStream fs = File.OpenRead(filePath);
+            using BinaryReader br = new(fs);
             byte[] signature = br.ReadBytes(4);
 
             if (signature.Length < 4 || signature[0] != 'f' || signature[1] != 'L' || signature[2] != 'a' || signature[3] != 'C')
@@ -850,8 +857,11 @@ namespace Codec_Playground_H
                     return (ch, bps, sr, totalSamples);
                 }
 
-                fs.Seek(blockSize, SeekOrigin.Current);
-                if (isLast) break;
+                _ = fs.Seek(blockSize, SeekOrigin.Current);
+                if (isLast)
+                {
+                    break;
+                }
             }
 
             Log($"❌ STREAMINFO block not found");
@@ -886,7 +896,7 @@ namespace Codec_Playground_H
 
                 if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                 {
-                    using var wavReader = new WaveFileReader(audioFileInputPath);
+                    using WaveFileReader wavReader = new(audioFileInputPath);
                     channels = wavReader.WaveFormat.Channels;
                     bitsPerSample = wavReader.WaveFormat.BitsPerSample;
                     sampleRate = wavReader.WaveFormat.SampleRate;
@@ -895,12 +905,12 @@ namespace Codec_Playground_H
                 }
                 else if (ext.Equals(".flac", StringComparison.OrdinalIgnoreCase))
                 {
-                    var flacInfo = ReadFlacStreamInfo(audioFileInputPath);
-                    channels = flacInfo.Channels;
-                    bitsPerSample = flacInfo.BitsPerSample;
-                    sampleRate = flacInfo.SampleRate;
-                    durationSec = flacInfo.TotalSamples > 0 && flacInfo.SampleRate > 0
-                        ? (double)flacInfo.TotalSamples / flacInfo.SampleRate
+                    (int Channels, int BitsPerSample, int SampleRate, long TotalSamples) = ReadFlacStreamInfo(audioFileInputPath);
+                    channels = Channels;
+                    bitsPerSample = BitsPerSample;
+                    sampleRate = SampleRate;
+                    durationSec = TotalSamples > 0 && SampleRate > 0
+                        ? (double)TotalSamples / SampleRate
                         : 0;
                     Log($"📊 FLAC: {channels}ch, {bitsPerSample}bit, {sampleRate}Hz, {durationSec:F1}s");
                 }
@@ -973,11 +983,10 @@ namespace Codec_Playground_H
                 {
                     try
                     {
-                        var audioFiles = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
+                        string[] audioFiles = [.. Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
                             .Where(f =>
                                 Path.GetExtension(f).Equals(".wav", StringComparison.OrdinalIgnoreCase) ||
-                                Path.GetExtension(f).Equals(".flac", StringComparison.OrdinalIgnoreCase))
-                            .ToArray();
+                                Path.GetExtension(f).Equals(".flac", StringComparison.OrdinalIgnoreCase))];
                         Log($"📁 Found {audioFiles.Length} audio files in folder: {path}");
                         foreach (string audioPath in audioFiles)
                         {
@@ -1032,9 +1041,17 @@ namespace Codec_Playground_H
             }
 
             foreach (ListViewItem item in listViewAudioFiles.Items)
-                if (item != e.Item) item.Checked = false;
+            {
+                if (item != e.Item)
+                {
+                    item.Checked = false;
+                }
+            }
 
-            if (string.IsNullOrEmpty(newPath)) return;
+            if (string.IsNullOrEmpty(newPath))
+            {
+                return;
+            }
 
             _pendingPlayAfterEncode = false;
             _originalFilePath = newPath;
@@ -1048,7 +1065,7 @@ namespace Codec_Playground_H
             bool wasActive = _currentPlayerState is PlayerState.Playing or PlayerState.Paused;
             if (wasActive)
             {
-                Interlocked.Increment(ref _seamlessRequestVersion);
+                _ = Interlocked.Increment(ref _seamlessRequestVersion);
                 PausePlaybackForFileSwitch();
                 Log($"▶️ Auto-starting playback for new file (was {_currentPlayerState})");
 
@@ -1116,8 +1133,6 @@ namespace Codec_Playground_H
             int bitrate = 0;
             int vbrValue = 0;
             int qValue = 0;
-            bool useQ = false;
-            bool useChannels = false;
             string channelMode = "";
 
             if (radioButtonModeCBR_MP3.Checked)
@@ -1136,15 +1151,27 @@ namespace Codec_Playground_H
                 vbrValue = Math.Abs(trackBarVBR_MP3.Value);
             }
 
-            useQ = checkBoxParameter_q_MP3.Checked;
-            if (useQ) qValue = Math.Abs(trackBarParameter_q_MP3.Value);
+            bool useQ = checkBoxParameter_q_MP3.Checked;
+            if (useQ)
+            {
+                qValue = Math.Abs(trackBarParameter_q_MP3.Value);
+            }
 
-            useChannels = checkBoxChannelsModes_MP3.Checked;
+            bool useChannels = checkBoxChannelsModes_MP3.Checked;
             if (useChannels)
             {
-                if (radioButtonJointStereo_MP3.Checked) channelMode = "j";
-                else if (radioButtonStereo_MP3.Checked) channelMode = "s";
-                else if (radioButtonMono_MP3.Checked) channelMode = "m";
+                if (radioButtonJointStereo_MP3.Checked)
+                {
+                    channelMode = "j";
+                }
+                else if (radioButtonStereo_MP3.Checked)
+                {
+                    channelMode = "s";
+                }
+                else if (radioButtonMono_MP3.Checked)
+                {
+                    channelMode = "m";
+                }
             }
 
             StringBuilder args = new();
@@ -1157,8 +1184,15 @@ namespace Codec_Playground_H
                     case "VBR": _ = args.Append($"-V {vbrValue} "); break;
                 }
             }
-            if (useQ) _ = args.Append($"-q {qValue} ");
-            if (useChannels && !string.IsNullOrEmpty(channelMode)) _ = args.Append($"-m {channelMode} ");
+            if (useQ)
+            {
+                _ = args.Append($"-q {qValue} ");
+            }
+
+            if (useChannels && !string.IsNullOrEmpty(channelMode))
+            {
+                _ = args.Append($"-m {channelMode} ");
+            }
 
             return args.ToString().TrimEnd();
         }
@@ -1180,14 +1214,9 @@ namespace Codec_Playground_H
             }
             else
             {
-                if (!string.IsNullOrEmpty(uiArgs))
-                {
-                    _ = args.Append($"{uiArgs} \"{inputPath}\" \"{outputPath}\"");
-                }
-                else
-                {
-                    _ = args.Append($"\"{inputPath}\" \"{outputPath}\"");
-                }
+                _ = !string.IsNullOrEmpty(uiArgs)
+                    ? args.Append($"{uiArgs} \"{inputPath}\" \"{outputPath}\"")
+                    : args.Append($"\"{inputPath}\" \"{outputPath}\"");
                 Log($"🔧 BuildLameArguments: {uiArgs}");
             }
             return args.ToString();
@@ -1195,17 +1224,21 @@ namespace Codec_Playground_H
         private int ParseProgress(string line)
         {
             Match match = Regex.Match(line, @"\((\d+)%\)");
-            if (match.Success && int.TryParse(match.Groups[1].Value, out int progress))
-            {
-                return progress;
-            }
-            return -1;
+            return match.Success && int.TryParse(match.Groups[1].Value, out int progress) ? progress : -1;
         }
         private static string GetPreEncodeWavPath(string inputPath, int targetBits, string tempFolder)
         {
             string safeName = Path.GetFileNameWithoutExtension(inputPath);
-            foreach (char c in Path.GetInvalidFileNameChars()) safeName = safeName.Replace(c, '_');
-            if (safeName.Length > 50) safeName = safeName[..50];
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
+                safeName = safeName.Replace(c, '_');
+            }
+
+            if (safeName.Length > 50)
+            {
+                safeName = safeName[..50];
+            }
+
             string pathHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(inputPath)))[..4];
             return Path.Combine(tempFolder, $"preencode_{safeName}_{targetBits}bit____{pathHash}.wav");
         }
@@ -1217,9 +1250,9 @@ namespace Codec_Playground_H
             int targetBits = 16;
             if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
             {
-                using var checkReader = new WaveFileReader(inputPath);
+                using WaveFileReader checkReader = new(inputPath);
                 int bps = checkReader.WaveFormat.BitsPerSample;
-                var enc = checkReader.WaveFormat.Encoding;
+                WaveFormatEncoding enc = checkReader.WaveFormat.Encoding;
                 if (bps == 16 && enc == WaveFormatEncoding.Pcm) { }
                 else if (bps == 24 && enc == WaveFormatEncoding.Pcm) { }
                 else { needsConversion = true; targetBits = 24; }
@@ -1245,15 +1278,15 @@ namespace Codec_Playground_H
                     // Load samples from original file
                     if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                     {
-                        using var wavReader = new WaveFileReader(inputPath);
-                        var provider = wavReader.WaveFormat.BitsPerSample == 24
+                        using WaveFileReader wavReader = new(inputPath);
+                        ISampleProvider provider = wavReader.WaveFormat.BitsPerSample == 24
                             ? new Wave24ToFloatProvider(wavReader)
                             : wavReader.ToSampleProvider();
                         samples = ReadAllSamples(provider);
                     }
                     else
                     {
-                        using var audioReader = new AudioFileReader(inputPath);
+                        using AudioFileReader audioReader = new(inputPath);
                         samples = ReadAllSamples(audioReader);
                     }
                 }
@@ -1270,8 +1303,8 @@ namespace Codec_Playground_H
                 if (loadSamples)
                 {
                     // Load samples from cached WAV
-                    using var cachedReader = new WaveFileReader(cachedWavPath);
-                    var cachedProvider = cachedReader.WaveFormat.BitsPerSample == 24
+                    using WaveFileReader cachedReader = new(cachedWavPath);
+                    ISampleProvider cachedProvider = cachedReader.WaveFormat.BitsPerSample == 24
                         ? new Wave24ToFloatProvider(cachedReader)
                         : cachedReader.ToSampleProvider();
                     samples = ReadAllSamples(cachedProvider);
@@ -1290,7 +1323,7 @@ namespace Codec_Playground_H
             {
                 if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                 {
-                    var wavReader = new WaveFileReader(inputPath);
+                    WaveFileReader wavReader = new(inputPath);
                     disposableSource = wavReader;
                     sampleRate = wavReader.WaveFormat.SampleRate;
                     channels = wavReader.WaveFormat.Channels;
@@ -1300,7 +1333,7 @@ namespace Codec_Playground_H
                 }
                 else
                 {
-                    var audioReader = new AudioFileReader(inputPath);
+                    AudioFileReader audioReader = new(inputPath);
                     disposableSource = audioReader;
                     sampleRate = audioReader.WaveFormat.SampleRate;
                     channels = audioReader.WaveFormat.Channels;
@@ -1320,8 +1353,8 @@ namespace Codec_Playground_H
                 if (loadSamples && convertedSamples != null)
                 {
                     // Use preloaded samples for writing
-                    var convertedFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
-                    var memSource = new MemorySampleSource(convertedSamples, convertedFormat);
+                    WaveFormat convertedFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
+                    MemorySampleSource memSource = new(convertedSamples, convertedFormat);
 
                     if (targetBits == 24)
                     {
@@ -1349,7 +1382,7 @@ namespace Codec_Playground_H
                     }
                 }
 
-                using (var writer = new WaveFileWriter(tempPreEncodeTmp, targetFormat))
+                using (WaveFileWriter writer = new(tempPreEncodeTmp, targetFormat))
                 {
                     byte[] buf = new byte[targetFormat.AverageBytesPerSecond];
                     int read;
@@ -1360,7 +1393,11 @@ namespace Codec_Playground_H
                     }
                 }
 
-                if (File.Exists(cachedWavPath)) File.Delete(cachedWavPath);
+                if (File.Exists(cachedWavPath))
+                {
+                    File.Delete(cachedWavPath);
+                }
+
                 File.Move(tempPreEncodeTmp, cachedWavPath);
                 Log($"✅ Seamless pre-encode ready: {new FileInfo(cachedWavPath).Length} bytes ({targetBits}-bit)");
 
@@ -1369,14 +1406,20 @@ namespace Codec_Playground_H
             finally
             {
                 disposableSource?.Dispose();
-                if (File.Exists(tempPreEncodeTmp)) try { File.Delete(tempPreEncodeTmp); } catch { }
+                if (File.Exists(tempPreEncodeTmp))
+                {
+                    try { File.Delete(tempPreEncodeTmp); } catch { }
+                }
             }
         }
         private async Task<string>
             EncodeToTempFileAsync(string inputPath, string cacheKey, string uiArgs, string presetArgs, bool isPreset, CancellationToken ct, long requestVersion = -1)
         {
             if (string.IsNullOrEmpty(_selectedEncoderPath))
+            {
                 throw new InvalidOperationException("Encoder is not selected.");
+            }
+
             string encoderPath = _selectedEncoderPath;
             string tempEncodedFile = Path.Combine(_tempFolder, $"{cacheKey}.mp3");
             if (File.Exists(tempEncodedFile) && new FileInfo(tempEncodedFile).Length > 0)
@@ -1421,10 +1464,18 @@ namespace Codec_Playground_H
                             {
                                 try
                                 {
-                                    BeginInvoke(() =>
+                                    _ = BeginInvoke(() =>
                                     {
-                                        if (requestVersion >= 0 && requestVersion != _seamlessRequestVersion) return;
-                                        if (_encodingStatus == EncodingStatus.Queued) _encodingStatus = EncodingStatus.Running;
+                                        if (requestVersion >= 0 && requestVersion != _seamlessRequestVersion)
+                                        {
+                                            return;
+                                        }
+
+                                        if (_encodingStatus == EncodingStatus.Queued)
+                                        {
+                                            _encodingStatus = EncodingStatus.Running;
+                                        }
+
                                         progressBarEncodingProcess.Value = progress;
                                         UpdateEncodingUI();
                                     });
@@ -1439,7 +1490,11 @@ namespace Codec_Playground_H
                 {
                     Invoke(() =>
                     {
-                        if (requestVersion >= 0 && requestVersion != _seamlessRequestVersion) return;
+                        if (requestVersion >= 0 && requestVersion != _seamlessRequestVersion)
+                        {
+                            return;
+                        }
+
                         _encodingStatus = EncodingStatus.Running;
                         UpdateEncodingUI();
                     });
@@ -1458,7 +1513,9 @@ namespace Codec_Playground_H
                 }
 
                 if (!File.Exists(tempEncodedFile) || new FileInfo(tempEncodedFile).Length == 0)
+                {
                     throw new Exception("Encoded file is empty");
+                }
 
                 Log($"✅ Seamless MP3 created: {new FileInfo(tempEncodedFile).Length} bytes");
                 return tempEncodedFile;
@@ -1491,7 +1548,10 @@ namespace Codec_Playground_H
             Log($"📝 EncodeFileAsync started: input={Path.GetFileName(inputPath)}, cacheKey={cacheKey}");
 
             if (string.IsNullOrEmpty(_selectedEncoderPath))
+            {
                 throw new InvalidOperationException("Encoder is not selected.");
+            }
+
             string encoderPath = _selectedEncoderPath;
             Log($"📌 Encoder path: {encoderPath}");
 
@@ -1523,12 +1583,15 @@ namespace Codec_Playground_H
                     try
                     {
                         Log($"🔄 Calculating delay for existing file");
-                        using (var mpegReader = new MediaFoundationReader(tempEncodedFile))
+                        using (MediaFoundationReader mpegReader = new(tempEncodedFile))
                         {
                             double duration = mpegReader.TotalTime.TotalSeconds;
                             int bitrateForDelay = 0;
                             if (duration > 0)
-                                bitrateForDelay = (int)((new FileInfo(tempEncodedFile).Length * 8) / duration / 1000);
+                            {
+                                bitrateForDelay = (int)(new FileInfo(tempEncodedFile).Length * 8 / duration / 1000);
+                            }
+
                             Log($"📊 MP3 duration: {duration:F2}s, bitrate: {bitrateForDelay} kbps");
 
                             cachedDelay = CalculateCodecDelay(inputPath, tempEncodedFile, bitrateForDelay);
@@ -1548,7 +1611,7 @@ namespace Codec_Playground_H
                 string currentUiCacheKeyExisting = "";
                 if (!string.IsNullOrEmpty(_originalFilePath) && !string.IsNullOrEmpty(_selectedEncoderPath))
                 {
-                    var (ck, _, _, _) = await GenerateCacheFileNameAndCacheKeyAsync(_originalFilePath, _selectedEncoderPath);
+                    (string? ck, string _, string _, bool _) = await GenerateCacheFileNameAndCacheKeyAsync(_originalFilePath, _selectedEncoderPath);
                     currentUiCacheKeyExisting = ck;
                 }
 
@@ -1558,7 +1621,7 @@ namespace Codec_Playground_H
                     {
                         _encodedFilePath = tempEncodedFile;
                         _encodingStatus = EncodingStatus.Completed;
-                        bool settingsMatch = (currentUiCacheKeyExisting == cacheKey);
+                        bool settingsMatch = currentUiCacheKeyExisting == cacheKey;
                         _needsReencoding = !settingsMatch;
                         _currentCacheKey = cacheKey;
                         Log($"✅ Encoding completed (existing file). Settings match: {settingsMatch}");
@@ -1667,11 +1730,14 @@ namespace Codec_Playground_H
                 Log($"✅ MP3 created: {fileSize} bytes ({fileSize / 1024} KB)");
 
                 int bitrate = 0;
-                using (var mpegReader = new MediaFoundationReader(tempEncodedFile))
+                using (MediaFoundationReader mpegReader = new(tempEncodedFile))
                 {
                     double duration = mpegReader.TotalTime.TotalSeconds;
                     if (duration > 0)
-                        bitrate = (int)((new FileInfo(tempEncodedFile).Length * 8) / duration / 1000);
+                    {
+                        bitrate = (int)(new FileInfo(tempEncodedFile).Length * 8 / duration / 1000);
+                    }
+
                     Log($"📊 MP3 duration: {duration:F2}s, bitrate: {bitrate} kbps");
                 }
 
@@ -1688,7 +1754,7 @@ namespace Codec_Playground_H
                 string currentUiCacheKeyCompleted = "";
                 if (!string.IsNullOrEmpty(_originalFilePath) && !string.IsNullOrEmpty(_selectedEncoderPath))
                 {
-                    var (ck, _, _, _) = await GenerateCacheFileNameAndCacheKeyAsync(_originalFilePath, _selectedEncoderPath);
+                    (string? ck, string _, string _, bool _) = await GenerateCacheFileNameAndCacheKeyAsync(_originalFilePath, _selectedEncoderPath);
                     currentUiCacheKeyCompleted = ck;
                 }
 
@@ -1698,7 +1764,7 @@ namespace Codec_Playground_H
                 {
                     _encodedFilePath = tempEncodedFile;
                     _encodingStatus = EncodingStatus.Completed;
-                    bool settingsMatch = (currentUiCacheKeyCompleted == cacheKey);
+                    bool settingsMatch = currentUiCacheKeyCompleted == cacheKey;
                     _needsReencoding = !settingsMatch;
                     _currentCacheKey = cacheKey;
                     Log($"✅ Encoding completed successfully. Settings match: {settingsMatch}");
@@ -1755,12 +1821,12 @@ namespace Codec_Playground_H
             if (string.IsNullOrEmpty(_selectedEncoderPath))
             {
                 Log($"⚠️ No encoder selected");
-                MessageBox.Show("Please select an encoder first!", "Warning",
+                _ = MessageBox.Show("Please select an encoder first!", "Warning",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var (cacheKey, uiArgs, presetArgs, isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(originalFilePath, _selectedEncoderPath);
+            (string? cacheKey, string? uiArgs, string? presetArgs, bool isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(originalFilePath, _selectedEncoderPath);
             _currentCacheKey = cacheKey;
             Log($"🔑 Cache key: {cacheKey}");
 
@@ -1795,7 +1861,7 @@ namespace Codec_Playground_H
                 Log($"🚀 Encoding task started");
                 try
                 {
-                    await EncodeFileAsync(originalFilePath, cacheKey, uiArgs, presetArgs, isPreset, token);
+                    _ = await EncodeFileAsync(originalFilePath, cacheKey, uiArgs, presetArgs, isPreset, token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -1837,7 +1903,7 @@ namespace Codec_Playground_H
             }
 
             long myVersion = _seamlessRequestVersion;
-            var (cacheKey, uiArgs, presetArgs, isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(newFilePath, _selectedEncoderPath);
+            (string? cacheKey, string? uiArgs, string? presetArgs, bool isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(newFilePath, _selectedEncoderPath);
             _currentCacheKey = cacheKey;
             Log($"🔑 File switch cache key: {cacheKey}");
 
@@ -1881,7 +1947,10 @@ namespace Codec_Playground_H
                     else
                     {
                         encodedPath = await EncodeToTempFileAsync(newFilePath, cacheKey, uiArgs, presetArgs, isPreset, token, myVersion);
-                        if (token.IsCancellationRequested) return;
+                        if (token.IsCancellationRequested)
+                        {
+                            return;
+                        }
 
                         Log("🔄 File switch: calculating codec delay...");
                         delay = ComputeDelayForFile(newFilePath, encodedPath);
@@ -1889,7 +1958,10 @@ namespace Codec_Playground_H
                         Log($"🔧 File switch: delay = {delay} samples");
                     }
 
-                    if (token.IsCancellationRequested) return;
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
                     Invoke(() =>
                     {
@@ -2031,7 +2103,7 @@ namespace Codec_Playground_H
             string encoderPath = _selectedEncoderPath;
 
             // Generate cache key asynchronously — UI thread is NOT blocked
-            var (cacheKey, uiArgs, presetArgs, isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(audioPath, encoderPath);
+            (string? cacheKey, string? uiArgs, string? presetArgs, bool isPreset) = await GenerateCacheFileNameAndCacheKeyAsync(audioPath, encoderPath);
 
             // After await we may be back on UI thread, but StartSeamlessSwap does not block
             StartSeamlessSwap(cacheKey, uiArgs, presetArgs, isPreset);
@@ -2131,7 +2203,10 @@ namespace Codec_Playground_H
                     else
                     {
                         encodedPath = await EncodeToTempFileAsync(originalPath, cacheKey, uiArgs, presetArgs, isPreset, token, myVersion);
-                        if (token.IsCancellationRequested) return;
+                        if (token.IsCancellationRequested)
+                        {
+                            return;
+                        }
 
                         Log("🔄 Seamless: calculating codec delay...");
                         delay = ComputeDelayForFile(originalPath, encodedPath);
@@ -2139,7 +2214,10 @@ namespace Codec_Playground_H
                         Log($"🔧 Seamless: delay = {delay} samples");
                     }
 
-                    if (token.IsCancellationRequested) return;
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
                     // Only swap if this is still the latest request and mixer is available
                     if (myVersion == _seamlessRequestVersion && _playgroundMixer != null)
@@ -2150,7 +2228,10 @@ namespace Codec_Playground_H
                     {
                         Log($"📦 Encoded and cached, swap skipped ({(myVersion != _seamlessRequestVersion ? "superseded" : "mixer unavailable")})");
                     }
-                    if (token.IsCancellationRequested) return;
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
                     Invoke(() =>
                     {
@@ -2214,7 +2295,7 @@ namespace Codec_Playground_H
             WaveFormat? origFormat = null;
 
             // Try to use already-loaded original samples from memory (avoids disk I/O)
-            var memSource = _originalMemorySource;
+            MemorySampleSource? memSource = _originalMemorySource;
             if (memSource != null && _originalFormat != null)
             {
                 origFormat = _originalFormat;
@@ -2238,7 +2319,7 @@ namespace Codec_Playground_H
                     Log($"📄 Original file extension: {ext}");
                     if (ext == ".wav")
                     {
-                        var wav = new WaveFileReader(originalPath);
+                        WaveFileReader wav = new(originalPath);
                         origDisposable = wav;
                         origFormat = wav.WaveFormat;
                         origProvider = (origFormat.BitsPerSample == 24)
@@ -2247,7 +2328,7 @@ namespace Codec_Playground_H
                     }
                     else if (ext == ".flac")
                     {
-                        var audio = new AudioFileReader(originalPath);
+                        AudioFileReader audio = new(originalPath);
                         origDisposable = audio;
                         origFormat = audio.WaveFormat;
                         origProvider = audio;
@@ -2266,15 +2347,20 @@ namespace Codec_Playground_H
                 }
 
                 Log($"📌 Opening encoded MP3 file: {encodedPath}");
-                using var mpegReader = new MediaFoundationReader(encodedPath);
-                var mp3Provider = mpegReader.ToSampleProvider();
-                var mp3Format = mpegReader.WaveFormat;
+                using MediaFoundationReader mpegReader = new(encodedPath);
+                ISampleProvider mp3Provider = mpegReader.ToSampleProvider();
+                WaveFormat mp3Format = mpegReader.WaveFormat;
 
                 ISampleProvider finalMp3 = mp3Provider;
                 if (mp3Format.Channels == 1 && origFormat.Channels == 2)
+                {
                     finalMp3 = new MonoToStereoSampleProvider(finalMp3);
+                }
+
                 if (mp3Format.SampleRate != origFormat.SampleRate)
+                {
                     finalMp3 = new WdlResamplingSampleProvider(finalMp3, origFormat.SampleRate);
+                }
 
                 int sampleRate = origFormat.SampleRate;
                 int channels = origFormat.Channels;
@@ -2390,21 +2476,34 @@ namespace Codec_Playground_H
             {
                 float sum = 0;
                 for (int c = 0; c < channels; c++)
-                    sum += origSamples[f * channels + c];
+                {
+                    sum += origSamples[(f * channels) + c];
+                }
+
                 monoOrig[f] = sum / channels;
             }
             for (int f = 0; f < totalFramesEnc; f++)
             {
                 float sum = 0;
                 for (int c = 0; c < channels; c++)
-                    sum += encSamples[f * channels + c];
+                {
+                    sum += encSamples[(f * channels) + c];
+                }
+
                 monoEnc[f] = sum / channels;
             }
             Log($"✅ Converted to mono: {monoOrig.Length} samples");
 
             int filterSize = 4;
-            if (bitrate is > 0 and <= 56) filterSize = 16;
-            else if (bitrate is > 0 and <= 64) filterSize = 4;
+            if (bitrate is > 0 and <= 56)
+            {
+                filterSize = 16;
+            }
+            else if (bitrate is > 0 and <= 64)
+            {
+                filterSize = 4;
+            }
+
             Log($"🔧 Initial filter size: {filterSize}");
 
             float highFreqRatio = 0;
@@ -2445,7 +2544,7 @@ namespace Codec_Playground_H
             }
 
             // Determine window positions (0%, 25%, 50%, 75%, 100% of file)
-            var windowPositions = new List<int>();
+            List<int> windowPositions = [];
             int numWindows = 5;
 
             if (windowSizeFrames >= monoOrig.Length)
@@ -2460,7 +2559,7 @@ namespace Codec_Playground_H
                 {
                     int position = (int)(monoOrig.Length * i / (double)(numWindows - 1));
                     int maxPosition = monoOrig.Length - windowSizeFrames;
-                    position = Math.Clamp(position - windowSizeFrames / 2, 0, maxPosition);
+                    position = Math.Clamp(position - (windowSizeFrames / 2), 0, maxPosition);
                     if (position >= 0 && position + windowSizeFrames <= monoOrig.Length)
                     {
                         windowPositions.Add(position);
@@ -2470,7 +2569,7 @@ namespace Codec_Playground_H
 
             Log($"🪟 Multi-window voting: {windowPositions.Count} windows, size={windowSizeFrames} frames ({windowSizeFrames / (double)sampleRate:F2}s)");
 
-            var allCandidates = new Dictionary<int, (int votes, double totalCorr)>();
+            Dictionary<int, (int votes, double totalCorr)> allCandidates = [];
             int searchWindow = 12000;
 
             foreach (int windowStart in windowPositions)
@@ -2491,7 +2590,7 @@ namespace Codec_Playground_H
                     {
                         float sumO = 0, sumE = 0;
                         int count = 0;
-                        for (int j = Math.Max(0, i - filterSize / 2); j < Math.Min(actualWindowSize, i + filterSize / 2); j++)
+                        for (int j = Math.Max(0, i - (filterSize / 2)); j < Math.Min(actualWindowSize, i + (filterSize / 2)); j++)
                         {
                             sumO += windowOrig[j];
                             sumE += windowEnc[j];
@@ -2527,7 +2626,10 @@ namespace Codec_Playground_H
                 }
 
                 int fftSize = 1;
-                while (fftSize < actualWindowSize * 2) fftSize <<= 1;
+                while (fftSize < actualWindowSize * 2)
+                {
+                    fftSize <<= 1;
+                }
 
                 Complex[] fftOrig = new Complex[fftSize];
                 Complex[] fftEncBuf = new Complex[fftSize];
@@ -2541,18 +2643,23 @@ namespace Codec_Playground_H
                 Fourier.Forward(fftEncBuf);
 
                 for (int i = 0; i < fftSize; i++)
+                {
                     fftOrig[i] = Complex.Conjugate(fftOrig[i]) * fftEncBuf[i];
+                }
 
                 Fourier.Inverse(fftOrig);
 
-                var windowPeaks = new List<(int offset, double corr)>();
+                List<(int offset, double corr)> windowPeaks = [];
                 for (int offset = -searchWindow; offset < searchWindow; offset++)
                 {
                     int idx = offset >= 0 ? offset : fftSize + offset;
                     int idxPrev = offset > -searchWindow ? (offset - 1 >= 0 ? offset - 1 : fftSize + offset - 1) : -1;
                     int idxNext = offset < searchWindow - 1 ? (offset + 1 >= 0 ? offset + 1 : fftSize + offset + 1) : -1;
 
-                    if (idxPrev < 0 || idxPrev >= fftSize || idxNext < 0 || idxNext >= fftSize) continue;
+                    if (idxPrev < 0 || idxPrev >= fftSize || idxNext < 0 || idxNext >= fftSize)
+                    {
+                        continue;
+                    }
 
                     double corr = fftOrig[idx].Real / normFactor;
                     double corrPrev = fftOrig[idxPrev].Real / normFactor;
@@ -2565,18 +2672,20 @@ namespace Codec_Playground_H
                 }
 
                 windowPeaks.Sort((a, b) => b.corr.CompareTo(a.corr));
-                var topPeaks = windowPeaks.Take(3).ToList();
+                List<(int offset, double corr)> topPeaks = [.. windowPeaks.Take(3)];
 
                 Log($"🪟 Window at {windowStart / (double)sampleRate:F2}s: {topPeaks.Count} peaks");
-                foreach (var (offset, corr) in topPeaks)
+                foreach ((int offset, double corr) in topPeaks)
                 {
                     Log($"  📌 offset={offset} ({offset / (double)sampleRate * 1000:F2} ms), corr={corr:F6}");
 
                     if (!allCandidates.ContainsKey(offset))
+                    {
                         allCandidates[offset] = (0, 0);
+                    }
 
-                    var current = allCandidates[offset];
-                    allCandidates[offset] = (current.votes + 1, current.totalCorr + corr);
+                    (int votes, double totalCorr) = allCandidates[offset];
+                    allCandidates[offset] = (votes + 1, totalCorr + corr);
                 }
             }
 
@@ -2586,19 +2695,18 @@ namespace Codec_Playground_H
                 return 0;
             }
 
-            var sortedCandidates = allCandidates
+            List<KeyValuePair<int, (int votes, double totalCorr)>> sortedCandidates = [.. allCandidates
                 .OrderByDescending(kv => kv.Value.votes)
-                .ThenByDescending(kv => kv.Value.totalCorr / kv.Value.votes)
-                .ToList();
+                .ThenByDescending(kv => kv.Value.totalCorr / kv.Value.votes)];
 
             Log($"🗳️ Voting results:");
-            foreach (var (offset, (votes, totalCorr)) in sortedCandidates.Take(10))
+            foreach ((int offset, (int votes, double totalCorr)) in sortedCandidates.Take(10))
             {
                 double avgCorr = totalCorr / votes;
                 Log($"  📊 offset={offset} ({offset / (double)sampleRate * 1000:F2} ms): {votes} votes, avgCorr={avgCorr:F6}");
             }
 
-            var winner = sortedCandidates[0];
+            KeyValuePair<int, (int votes, double totalCorr)> winner = sortedCandidates[0];
             int bestFrameOffset = winner.Key;
             double avgCorrelation = winner.Value.totalCorr / winner.Value.votes;
 
@@ -2617,10 +2725,12 @@ namespace Codec_Playground_H
             int bitrate = 0;
             try
             {
-                using var mpegReader = new MediaFoundationReader(encodedPath);
+                using MediaFoundationReader mpegReader = new(encodedPath);
                 double duration = mpegReader.TotalTime.TotalSeconds;
                 if (duration > 0)
-                    bitrate = (int)((new FileInfo(encodedPath).Length * 8) / duration / 1000);
+                {
+                    bitrate = (int)(new FileInfo(encodedPath).Length * 8 / duration / 1000);
+                }
             }
             catch (Exception ex)
             {
@@ -2688,7 +2798,11 @@ namespace Codec_Playground_H
                     float[] rawEnc = new float[count];
                     int readOrig = _sourceOriginal.Read(rawOrig, 0, count);
                     int readEnc = _sourceEncoded.Read(rawEnc, 0, count);
-                    if (readOrig == 0 && readEnc == 0) return 0;
+                    if (readOrig == 0 && readEnc == 0)
+                    {
+                        return 0;
+                    }
+
                     int maxRead = Math.Max(readOrig, readEnc);
                     for (int i = 0; i < maxRead; i++)
                     {
@@ -2700,7 +2814,7 @@ namespace Codec_Playground_H
                             case PlayMode.Encoded: buffer[offset + i] = sEnc; break;
                             case PlayMode.Mix:
                                 float b = _mixBalance;
-                                buffer[offset + i] = sOrig * (1f - b) + sEnc * b;
+                                buffer[offset + i] = (sOrig * (1f - b)) + (sEnc * b);
                                 break;
                             case PlayMode.Difference: buffer[offset + i] = (sOrig - sEnc) * 0.5f; break;
                             case PlayMode.PhaseTest: buffer[offset + i] = sOrig - sOrig; break;
@@ -2733,7 +2847,11 @@ namespace Codec_Playground_H
         public class MemorySampleSource(float[] data, WaveFormat format) : ISampleProvider
         {
             private readonly float[] _data = data;
-            public float[] GetData() => _data;
+            public float[] GetData()
+            {
+                return _data;
+            }
+
             private long _position;
 
             public WaveFormat WaveFormat { get; } = format;
@@ -2746,7 +2864,10 @@ namespace Codec_Playground_H
             public int Read(float[] buffer, int offset, int count)
             {
                 long available = _data.Length - _position;
-                if (available <= 0) return 0;
+                if (available <= 0)
+                {
+                    return 0;
+                }
 
                 int toCopy = (int)Math.Min(count, available);
                 Array.Copy(_data, _position, buffer, offset, toCopy);
@@ -2778,13 +2899,20 @@ namespace Codec_Playground_H
 
                 while (framesRead < framesNeeded)
                 {
-                    int bytesRead = _reader.Read(_buffer, 0, _buffer.Length); if (bytesRead == 0) break;
+                    int bytesRead = _reader.Read(_buffer, 0, _buffer.Length); if (bytesRead == 0)
+                    {
+                        break;
+                    }
 
                     for (int c = 0; c < _channels && samplesRead < count; c++)
                     {
                         int sample24 = 0; int byteOffset = c * _bytesPerSample;
                         sample24 |= _buffer[byteOffset + 0] << 0; sample24 |= _buffer[byteOffset + 1] << 8; sample24 |= _buffer[byteOffset + 2] << 16;
-                        if ((sample24 & 0x800000) != 0) sample24 |= unchecked((int)0xFF000000);
+                        if ((sample24 & 0x800000) != 0)
+                        {
+                            sample24 |= unchecked((int)0xFF000000);
+                        }
+
                         buffer[offset + samplesRead] = sample24 * _scale; samplesRead++;
                     }
                     framesRead++;
@@ -2819,7 +2947,7 @@ namespace Codec_Playground_H
                 {
                     float sample = Math.Clamp(floatBuffer[i], -1.0f, 1.0f);
                     int intSample = (int)(sample * 8388607.0f);
-                    int pos = offset + i * 3;
+                    int pos = offset + (i * 3);
                     buffer[pos + 0] = (byte)(intSample & 0xFF);
                     buffer[pos + 1] = (byte)((intSample >> 8) & 0xFF);
                     buffer[pos + 2] = (byte)((intSample >> 16) & 0xFF);
@@ -2831,7 +2959,7 @@ namespace Codec_Playground_H
 
         private float[] ReadAllSamples(ISampleProvider provider)
         {
-            using var ms = new MemoryStream();
+            using MemoryStream ms = new();
             float[] buf = new float[65536];
             byte[] bytes = new byte[65536 * 4];
             int read;
@@ -2853,11 +2981,10 @@ namespace Codec_Playground_H
         {
             string ext = Path.GetExtension(_originalFilePath!).ToLower();
             ISampleProvider provider;
-            IDisposable? disposable = null;
-
+            IDisposable? disposable;
             if (ext == ".wav")
             {
-                var wav = new WaveFileReader(_originalFilePath);
+                WaveFileReader wav = new(_originalFilePath);
                 originalFormat = wav.WaveFormat;
                 provider = (originalFormat.BitsPerSample == 24)
                     ? new Wave24ToFloatProvider(wav)
@@ -2866,7 +2993,7 @@ namespace Codec_Playground_H
             }
             else
             {
-                var audio = new AudioFileReader(_originalFilePath);
+                AudioFileReader audio = new(_originalFilePath);
                 originalFormat = audio.WaveFormat;
                 provider = audio;
                 disposable = audio;
@@ -2883,28 +3010,40 @@ namespace Codec_Playground_H
         }
         private float[] LoadEncodedToMemory(WaveFormat originalFormat)
         {
-            if (string.IsNullOrEmpty(_encodedFilePath))
-                throw new InvalidOperationException("No encoded file path specified for LoadEncodedToMemory");
-            return LoadEncodedToMemory(originalFormat, _encodedFilePath);
+            return string.IsNullOrEmpty(_encodedFilePath)
+                ? throw new InvalidOperationException("No encoded file path specified for LoadEncodedToMemory")
+                : LoadEncodedToMemory(originalFormat, _encodedFilePath);
         }
         private float[] LoadEncodedToMemory(WaveFormat originalFormat, string encodedPath)
         {
-            using var mpegReader = new MediaFoundationReader(encodedPath);
+            using MediaFoundationReader mpegReader = new(encodedPath);
             ISampleProvider provider = mpegReader.ToSampleProvider();
 
             if (mpegReader.WaveFormat.Channels == 1 && originalFormat.Channels == 2)
+            {
                 provider = new MonoToStereoSampleProvider(provider);
+            }
+
             if (mpegReader.WaveFormat.SampleRate != originalFormat.SampleRate)
+            {
                 provider = new WdlResamplingSampleProvider(provider, originalFormat.SampleRate);
+            }
 
             return ReadAllSamples(provider);
         }
-        private static float[] GetOriginalDataArray(MemorySampleSource source) => source.GetData();
+        private static float[] GetOriginalDataArray(MemorySampleSource source)
+        {
+            return source.GetData();
+        }
 
         // Playback
         private long GetPlaybackPositionBytes()
         {
-            if (_playgroundMixer != null) return _playgroundMixer.GetPositionBytes();
+            if (_playgroundMixer != null)
+            {
+                return _playgroundMixer.GetPositionBytes();
+            }
+
             if (_originalMemorySource != null)
             {
                 long frame = _originalMemorySource.PositionSamples / _originalMemorySource.WaveFormat.Channels;
@@ -2914,7 +3053,11 @@ namespace Codec_Playground_H
         }
         private long GetPlaybackTotalBytes()
         {
-            if (_playgroundMixer != null) return _playgroundMixer.GetTotalBytes();
+            if (_playgroundMixer != null)
+            {
+                return _playgroundMixer.GetTotalBytes();
+            }
+
             if (_originalMemorySource != null)
             {
                 long frame = _originalMemorySource.LengthSamples / _originalMemorySource.WaveFormat.Channels;
@@ -2949,7 +3092,7 @@ namespace Codec_Playground_H
                 Log($"⚠️ ConvertWavBytesToMilliseconds: invalid bytesPerSecond={bytesPerSecond}");
                 return 0;
             }
-            double ms = (wavBytes / (double)bytesPerSecond) * 1000;
+            double ms = wavBytes / (double)bytesPerSecond * 1000;
             Log($"📊 ConvertWavBytesToMilliseconds: {wavBytes} bytes = {ms:F2} ms");
             return ms;
         }
@@ -2981,12 +3124,12 @@ namespace Codec_Playground_H
                     string ext = Path.GetExtension(_originalFilePath!).ToLower();
                     if (ext == ".wav")
                     {
-                        using var wav = new WaveFileReader(_originalFilePath);
+                        using WaveFileReader wav = new(_originalFilePath);
                         originalFormat = wav.WaveFormat;
                     }
                     else
                     {
-                        using var audio = new AudioFileReader(_originalFilePath);
+                        using AudioFileReader audio = new(_originalFilePath);
                         originalFormat = audio.WaveFormat;
                     }
                 }
@@ -2997,7 +3140,7 @@ namespace Codec_Playground_H
 
                 _originalFormat = originalFormat;
                 _originalBytesPerFrame = originalFormat.Channels * (originalFormat.BitsPerSample / 8);
-                var floatFormat = WaveFormat.CreateIeeeFloatWaveFormat(originalFormat.SampleRate, originalFormat.Channels);
+                WaveFormat floatFormat = WaveFormat.CreateIeeeFloatWaveFormat(originalFormat.SampleRate, originalFormat.Channels);
                 _originalMemorySource = new MemorySampleSource(origData, floatFormat);
                 Log($"✅ Original loaded to memory: {origData.Length} samples, format={originalFormat}");
 
@@ -3008,7 +3151,7 @@ namespace Codec_Playground_H
                     int delaySamples = 0;
                     if (_currentCacheKey != null)
                     {
-                        _encodingCache.TryGetEncoded(_currentCacheKey, out _, out delaySamples);
+                        _ = _encodingCache.TryGetEncoded(_currentCacheKey, out _, out delaySamples);
                     }
                     Log($"📌 Using delay: {delaySamples} samples");
 
@@ -3031,7 +3174,7 @@ namespace Codec_Playground_H
                         }
                     }
 
-                    var encSource = new MemorySampleSource(encData, floatFormat);
+                    MemorySampleSource encSource = new(encData, floatFormat);
                     Log($"✅ Encoded loaded to memory: {encData.Length} samples");
 
                     _playgroundMixer = new CodecPlaygroundMixer(_originalMemorySource, encSource, originalFormat, delaySamples)
@@ -3055,7 +3198,10 @@ namespace Codec_Playground_H
                     long totalBytes = GetPlaybackTotalBytes();
                     long safePosition = Math.Min(_currentPlaybackPosition, totalBytes > 0 ? totalBytes : 0);
                     if (_originalBytesPerFrame > 0)
+                    {
                         safePosition -= safePosition % _originalBytesPerFrame;
+                    }
+
                     Log($"📌 Restoring position: {safePosition} bytes (requested: {_currentPlaybackPosition}, max: {totalBytes})");
                     SeekPlaybackToBytes(safePosition);
                 }
@@ -3066,13 +3212,13 @@ namespace Codec_Playground_H
             {
                 Log($"❌ ERROR in InitializePlayback: {ex.Message}");
                 Log($"❌ StackTrace: {ex.StackTrace}");
-                MessageBox.Show($"Error initializing playback: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _ = MessageBox.Show($"Error initializing playback: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private void DecodeAndSwap(string encodedPath, int delaySamples, string cacheKey)
         {
-            var mixer = _playgroundMixer;
-            var format = _originalFormat;
+            CodecPlaygroundMixer? mixer = _playgroundMixer;
+            WaveFormat? format = _originalFormat;
 
             if (mixer == null || format == null)
             {
@@ -3096,8 +3242,8 @@ namespace Codec_Playground_H
                 Log($"💾 Decoded cache stored: {encData.Length} samples");
             }
 
-            var floatFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
-            var newEncSource = new MemorySampleSource(encData, floatFormat);
+            WaveFormat floatFormat = WaveFormat.CreateIeeeFloatWaveFormat(format.SampleRate, format.Channels);
+            MemorySampleSource newEncSource = new(encData, floatFormat);
             mixer.SwapEncoded(newEncSource, delaySamples);
             Log($"✅ Decoded & swapped: {encData.Length} samples, delay={delaySamples}");
         }
@@ -3105,7 +3251,10 @@ namespace Codec_Playground_H
         {
             Log($"▶️ PlayDual called, waveOut={_waveOut != null}");
 
-            if (_waveOut == null) return;
+            if (_waveOut == null)
+            {
+                return;
+            }
 
             try
             {
@@ -3321,7 +3470,10 @@ namespace Codec_Playground_H
 
         private void TimerTrackBarSeek_Tick(object? sender, EventArgs e)
         {
-            if (_isDraggingWaveformSeek || _waveOut == null) return;
+            if (_isDraggingWaveformSeek || _waveOut == null)
+            {
+                return;
+            }
 
             if (_waveOut.PlaybackState is PlaybackState.Playing or PlaybackState.Paused)
             {
@@ -3348,7 +3500,10 @@ namespace Codec_Playground_H
                             {
                                 Log($"🔁 Loop: restarting playback");
                                 SeekPlaybackToBytes(0);
-                                if (_waveOut != null && _currentPlayerState == PlayerState.Playing) _waveOut.Play();
+                                if (_waveOut != null && _currentPlayerState == PlayerState.Playing)
+                                {
+                                    _waveOut.Play();
+                                }
                             }
                         }
                     }
@@ -3362,11 +3517,18 @@ namespace Codec_Playground_H
         }
         private void WaveformSeek_MouseDown(object? sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left) return;
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
             Log($"🖱️ Waveform seek mouse down at X={e.X}");
 
             long totalLength = GetPlaybackTotalBytes();
-            if (totalLength <= 0) return;
+            if (totalLength <= 0)
+            {
+                return;
+            }
 
             float progress = Math.Clamp((float)e.X / waveformSeek.Width, 0f, 1f);
             long newWavPosition = (long)(totalLength * progress);
@@ -3394,7 +3556,10 @@ namespace Codec_Playground_H
         }
         private void WaveformSeek_MouseMove(object? sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left) return;
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
 
             _isDraggingWaveformSeek = true;
 
@@ -3404,13 +3569,19 @@ namespace Codec_Playground_H
         }
         private void WaveformSeek_MouseUp(object? sender, MouseEventArgs e)
         {
-            if (!_isDraggingWaveformSeek || e.Button != MouseButtons.Left) return;
+            if (!_isDraggingWaveformSeek || e.Button != MouseButtons.Left)
+            {
+                return;
+            }
 
             _isDraggingWaveformSeek = false;
             Log($"🖱️ Waveform seek mouse up at X={e.X}");
 
             long totalLength = GetPlaybackTotalBytes();
-            if (totalLength <= 0) return;
+            if (totalLength <= 0)
+            {
+                return;
+            }
 
             float progress = Math.Clamp((float)e.X / waveformSeek.Width, 0f, 1f);
             long newWavPosition = (long)(totalLength * progress);
@@ -3447,7 +3618,10 @@ namespace Codec_Playground_H
                                    rb == radioButtonPlayMix ? PlayMode.Mix :
                                    rb == radioButtonPlayDifference ? PlayMode.Difference : PlayMode.Original;
 
-                if (_currentPlayMode == newMode) return;
+                if (_currentPlayMode == newMode)
+                {
+                    return;
+                }
 
                 Log($"=== SWITCH: {_currentPlayMode} -> {newMode} ===");
                 _currentPlayMode = newMode;
@@ -3545,11 +3719,21 @@ namespace Codec_Playground_H
                 Log($"🔑 Generating cache key for {Path.GetFileName(audioPath)}");
 
                 string fileNameWithExt = Path.GetFileName(audioPath);
-                foreach (char c in Path.GetInvalidFileNameChars()) fileNameWithExt = fileNameWithExt.Replace(c, '_');
-                if (string.IsNullOrEmpty(fileNameWithExt)) fileNameWithExt = "audio.wav";
+                foreach (char c in Path.GetInvalidFileNameChars())
+                {
+                    fileNameWithExt = fileNameWithExt.Replace(c, '_');
+                }
+
+                if (string.IsNullOrEmpty(fileNameWithExt))
+                {
+                    fileNameWithExt = "audio.wav";
+                }
 
                 string encoderName = Path.GetFileNameWithoutExtension(encoderPath);
-                if (string.IsNullOrEmpty(encoderName)) encoderName = "encoder";
+                if (string.IsNullOrEmpty(encoderName))
+                {
+                    encoderName = "encoder";
+                }
 
                 string encoderVersion = "unknown";
                 try
@@ -3558,9 +3742,16 @@ namespace Codec_Playground_H
                     if (!string.IsNullOrEmpty(info.Version) && info.Version != "Unknown")
                     {
                         encoderVersion = info.Version;
-                        foreach (char c in Path.GetInvalidFileNameChars()) encoderVersion = encoderVersion.Replace(c, '_');
+                        foreach (char c in Path.GetInvalidFileNameChars())
+                        {
+                            encoderVersion = encoderVersion.Replace(c, '_');
+                        }
+
                         encoderVersion = encoderVersion.Replace(' ', '_').Replace('.', '_');
-                        if (encoderVersion.Length > 70) encoderVersion = encoderVersion[..70];
+                        if (encoderVersion.Length > 70)
+                        {
+                            encoderVersion = encoderVersion[..70];
+                        }
                     }
                 }
                 catch { }
@@ -3570,13 +3761,27 @@ namespace Codec_Playground_H
                 if (isPresetSelected)
                 {
                     string cleanPresetArgs = presetArgs;
-                    foreach (char c in Path.GetInvalidFileNameChars()) cleanPresetArgs = cleanPresetArgs.Replace(c, '_');
+                    foreach (char c in Path.GetInvalidFileNameChars())
+                    {
+                        cleanPresetArgs = cleanPresetArgs.Replace(c, '_');
+                    }
+
                     cleanPresetArgs = cleanPresetArgs.Replace(' ', '_').Replace('"', '_');
-                    if (cleanPresetArgs.Length > 50) cleanPresetArgs = cleanPresetArgs[..50];
-                    if (string.IsNullOrEmpty(cleanPresetArgs)) cleanPresetArgs = "empty";
+                    if (cleanPresetArgs.Length > 50)
+                    {
+                        cleanPresetArgs = cleanPresetArgs[..50];
+                    }
+
+                    if (string.IsNullOrEmpty(cleanPresetArgs))
+                    {
+                        cleanPresetArgs = "empty";
+                    }
 
                     string readableName = $"{fileNameWithExt}_{encoderFullName}_PRESET_{cleanPresetArgs}";
-                    if (readableName.Length > 130) readableName = readableName[..130];
+                    if (readableName.Length > 130)
+                    {
+                        readableName = readableName[..130];
+                    }
 
                     StringBuilder settings = new();
                     _ = settings.Append($"{audioPath}|{encoderPath}|{encoderVersion}|PRESET|{presetArgs}");
@@ -3590,11 +3795,21 @@ namespace Codec_Playground_H
                 }
 
                 string cleanUiArgs = uiArgs.Replace(" ", "_").Replace("-", "");
-                foreach (char c in Path.GetInvalidFileNameChars()) cleanUiArgs = cleanUiArgs.Replace(c, '_');
-                if (string.IsNullOrEmpty(cleanUiArgs)) cleanUiArgs = "default";
+                foreach (char c in Path.GetInvalidFileNameChars())
+                {
+                    cleanUiArgs = cleanUiArgs.Replace(c, '_');
+                }
+
+                if (string.IsNullOrEmpty(cleanUiArgs))
+                {
+                    cleanUiArgs = "default";
+                }
 
                 string readableName2 = $"{fileNameWithExt}_{encoderFullName}_{cleanUiArgs}";
-                if (readableName2.Length > 130) readableName2 = readableName2[..130];
+                if (readableName2.Length > 130)
+                {
+                    readableName2 = readableName2[..130];
+                }
 
                 StringBuilder settings2 = new();
                 _ = settings2.Append($"{audioPath}|{encoderPath}|{encoderVersion}|{uiArgs}");
@@ -3614,14 +3829,14 @@ namespace Codec_Playground_H
             Log($"🗑️ ClearCache called");
 
             // Get all files to delete before clearing cache
-            var filesToDelete = _encodingCache.GetAllEncodedFiles();
+            List<string> filesToDelete = _encodingCache.GetAllEncodedFiles();
 
             // Clear unified cache
             _encodingCache.Clear();
             _currentCacheKey = null;
 
             // Delete cached files
-            foreach (var file in filesToDelete)
+            foreach (string file in filesToDelete)
             {
                 try
                 {
@@ -3661,7 +3876,7 @@ namespace Codec_Playground_H
                     Log($"📋 MediaInfo: using temp file due to long path ({filePath.Length} chars)");
                 }
 
-                var mediaInfo = new MediaInfo();
+                MediaInfo mediaInfo = new();
                 if (mediaInfo.Open(fileToOpen) == 0)
                 {
                     mediaInfo.Close();
@@ -3716,10 +3931,14 @@ namespace Codec_Playground_H
         private void RadioButtonMode_CheckedChanged(object? sender, EventArgs e)
         {
             if (sender is RadioButton rb && (rb == radioButton_Hidden_Mode_OFF_MP3 || rb == radioButton_Hidden_UserPreset_OFF))
+            {
                 return;
+            }
 
             if (sender is not RadioButton radio || !radio.Checked)
+            {
                 return;
+            }
 
             bool isMP3SettingsModeButton = radio == radioButtonModeCBR_MP3 || radio == radioButtonModeABR_MP3 ||
                                            radio == radioButtonModeVBR_MP3;
@@ -3864,16 +4083,40 @@ namespace Codec_Playground_H
         // User Presets
         private void ButtonSaveUserPreset_Click(object? sender, EventArgs e)
         {
-            if (sender is not Button button) return;
+            if (sender is not Button button)
+            {
+                return;
+            }
 
-            int presetNumber = 0;
-            if (button == buttonSaveUserPreset1) presetNumber = 1;
-            else if (button == buttonSaveUserPreset2) presetNumber = 2;
-            else if (button == buttonSaveUserPreset3) presetNumber = 3;
-            else if (button == buttonSaveUserPreset4) presetNumber = 4;
-            else if (button == buttonSaveUserPreset5) presetNumber = 5;
-            else if (button == buttonSaveUserPreset6) presetNumber = 6;
-            else return;
+            int presetNumber;
+            if (button == buttonSaveUserPreset1)
+            {
+                presetNumber = 1;
+            }
+            else if (button == buttonSaveUserPreset2)
+            {
+                presetNumber = 2;
+            }
+            else if (button == buttonSaveUserPreset3)
+            {
+                presetNumber = 3;
+            }
+            else if (button == buttonSaveUserPreset4)
+            {
+                presetNumber = 4;
+            }
+            else if (button == buttonSaveUserPreset5)
+            {
+                presetNumber = 5;
+            }
+            else if (button == buttonSaveUserPreset6)
+            {
+                presetNumber = 6;
+            }
+            else
+            {
+                return;
+            }
 
             Log($"💾 Saving user preset {presetNumber}");
             string args = GetCurrentCommandLineArgs();
@@ -3893,16 +4136,40 @@ namespace Codec_Playground_H
         }
         private void ButtonUserPresetClear_Click(object? sender, EventArgs e)
         {
-            if (sender is not Button button) return;
+            if (sender is not Button button)
+            {
+                return;
+            }
 
-            int presetNumber = 0;
-            if (button == buttonUserPreset1Clear) presetNumber = 1;
-            else if (button == buttonUserPreset2Clear) presetNumber = 2;
-            else if (button == buttonUserPreset3Clear) presetNumber = 3;
-            else if (button == buttonUserPreset4Clear) presetNumber = 4;
-            else if (button == buttonUserPreset5Clear) presetNumber = 5;
-            else if (button == buttonUserPreset6Clear) presetNumber = 6;
-            else return;
+            int presetNumber;
+            if (button == buttonUserPreset1Clear)
+            {
+                presetNumber = 1;
+            }
+            else if (button == buttonUserPreset2Clear)
+            {
+                presetNumber = 2;
+            }
+            else if (button == buttonUserPreset3Clear)
+            {
+                presetNumber = 3;
+            }
+            else if (button == buttonUserPreset4Clear)
+            {
+                presetNumber = 4;
+            }
+            else if (button == buttonUserPreset5Clear)
+            {
+                presetNumber = 5;
+            }
+            else if (button == buttonUserPreset6Clear)
+            {
+                presetNumber = 6;
+            }
+            else
+            {
+                return;
+            }
 
             Log($"🗑️ Clearing user preset {presetNumber}");
 
@@ -3993,7 +4260,10 @@ namespace Codec_Playground_H
         }
         private void ButtonClear_Click(object? sender, EventArgs e)
         {
-            if (sender is not Button clickedButton) return;
+            if (sender is not Button clickedButton)
+            {
+                return;
+            }
 
             Log($"🗑️ Clear button clicked: {clickedButton.Name}");
             StopDualPlayback();
@@ -4033,15 +4303,15 @@ namespace Codec_Playground_H
             if (listViewAudioFiles.Items.Count == 1)
             {
                 Log($"ℹ️ Only one audio file, selecting it");
-                var item = listViewAudioFiles.Items[0];
+                ListViewItem item = listViewAudioFiles.Items[0];
                 item.Checked = true;
                 ShowNotification($"🎵 Selected: {item.Text}", true, 3000);
                 return;
             }
 
-            var random = new Random();
+            Random random = new();
             int selectedIndex = random.Next(listViewAudioFiles.Items.Count);
-            var selectedItem = listViewAudioFiles.Items[selectedIndex];
+            ListViewItem selectedItem = listViewAudioFiles.Items[selectedIndex];
 
             selectedItem.Checked = true;
             Log($"🎲 Random audio file selected: {selectedItem.Text} (index {selectedIndex})");
@@ -4049,8 +4319,8 @@ namespace Codec_Playground_H
         }
         private void ABTestPresets(int count)
         {
-            var presetRadios = new List<RadioButton>();
-            var presetNames = new List<string>();
+            List<RadioButton> presetRadios = [];
+            List<string> presetNames = [];
             int currentIndex = -1;
 
             for (int i = 1; i <= count; i++)
@@ -4081,7 +4351,10 @@ namespace Codec_Playground_H
                 {
                     presetRadios.Add(radio);
                     presetNames.Add(radio.Text);
-                    if (radio.Checked) currentIndex = presetRadios.Count - 1;
+                    if (radio.Checked)
+                    {
+                        currentIndex = presetRadios.Count - 1;
+                    }
                 }
             }
 
@@ -4092,9 +4365,9 @@ namespace Codec_Playground_H
                 return;
             }
 
-            var random = new Random();
+            Random random = new();
             int newIndex = random.Next(presetRadios.Count);
-            var selectedRadio = presetRadios[newIndex];
+            RadioButton selectedRadio = presetRadios[newIndex];
             string selection = presetNames[newIndex];
 
             if (newIndex == currentIndex && currentIndex != -1)
@@ -4128,8 +4401,8 @@ namespace Codec_Playground_H
 
             public bool IsNewerThan(string currentVersion)
             {
-                var parts1 = TagName.Split('.');
-                var parts2 = currentVersion.Split('.');
+                string[] parts1 = TagName.Split('.');
+                string[] parts2 = currentVersion.Split('.');
                 int maxLen = Math.Max(parts1.Length, parts2.Length);
 
                 for (int i = 0; i < maxLen; i++)
@@ -4137,7 +4410,9 @@ namespace Codec_Playground_H
                     int p1 = i < parts1.Length ? int.Parse(parts1[i]) : 0;
                     int p2 = i < parts2.Length ? int.Parse(parts2[i]) : 0;
                     if (p1 != p2)
+                    {
                         return p1 > p2;
+                    }
                 }
                 return false;
             }
@@ -4155,7 +4430,10 @@ namespace Codec_Playground_H
 
         private async Task CheckForUpdatesAsync()
         {
-            if (_isUpdateInProgress) return;
+            if (_isUpdateInProgress)
+            {
+                return;
+            }
 
             try
             {
@@ -4163,7 +4441,7 @@ namespace Codec_Playground_H
                 ShowNotification("⏳ Checking for updates...", true, 0);
                 Log($"🔍 Checking for updates... Current: {APP_VERSION}");
 
-                var release = await GetLatestReleaseAsync();
+                GitHubRelease? release = await GetLatestReleaseAsync();
                 if (release == null)
                 {
                     Log("ℹ️ No updates available or API error");
@@ -4179,7 +4457,7 @@ namespace Codec_Playground_H
                 }
 
                 Log($"📢 New version {release.TagName} available!");
-                Invoke(() => labelNoUpdates.Visible = false);
+                _ = Invoke(() => labelNoUpdates.Visible = false);
 
                 DialogResult result = MessageBox.Show(
                     $"New version {release.TagName} is available!\n" +
@@ -4191,7 +4469,7 @@ namespace Codec_Playground_H
 
                 if (result == DialogResult.Yes)
                 {
-                    Process.Start(new ProcessStartInfo
+                    _ = Process.Start(new ProcessStartInfo
                     {
                         FileName = RELEASES_URL,
                         UseShellExecute = true
@@ -4218,11 +4496,11 @@ namespace Codec_Playground_H
         {
             try
             {
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("Codec-Playground-H/1.0");
+                using HttpClient httpClient = new();
+                _ = httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("Codec-Playground-H/1.0");
                 httpClient.Timeout = TimeSpan.FromSeconds(10);
 
-                var response = await httpClient.GetAsync(API_URL);
+                HttpResponseMessage response = await httpClient.GetAsync(API_URL);
                 if (!response.IsSuccessStatusCode)
                 {
                     Log($"⚠️ GitHub API error: {response.StatusCode}");
@@ -4230,7 +4508,7 @@ namespace Codec_Playground_H
                 }
 
                 string json = await response.Content.ReadAsStringAsync();
-                var release = JsonSerializer.Deserialize<GitHubRelease>(json);
+                GitHubRelease? release = JsonSerializer.Deserialize<GitHubRelease>(json);
 
                 if (release == null || string.IsNullOrEmpty(release.TagName))
                 {
@@ -4316,7 +4594,7 @@ namespace Codec_Playground_H
                 if (_currentEncodingTask != null && !_currentEncodingTask.IsCompleted)
                 {
                     Log($"⏳ Waiting for encoding task to finish...");
-                    try { _currentEncodingTask.Wait(2000); } catch { }
+                    try { _ = _currentEncodingTask.Wait(2000); } catch { }
                 }
 
                 // StopDualPlayback cancels _seamlessCts and disposes waveOut
@@ -4327,7 +4605,10 @@ namespace Codec_Playground_H
                 {
                     Application.DoEvents();
                     System.Threading.Thread.Sleep(50);
-                    if (_waveOut == null) break;
+                    if (_waveOut == null)
+                    {
+                        break;
+                    }
                 }
             }
             catch (Exception ex)
@@ -4364,30 +4645,45 @@ namespace Codec_Playground_H
 
                 if (Directory.Exists(_tempFolder))
                 {
-                    var tempFiles = Directory.GetFiles(_tempFolder, "*.mp3");
+                    string[] tempFiles = Directory.GetFiles(_tempFolder, "*.mp3");
                     Log($"📊 Found {tempFiles.Length} MP3 files in temp");
-                    foreach (var file in tempFiles)
+                    foreach (string file in tempFiles)
+                    {
                         if (!filesToDelete.Contains(file))
+                        {
                             filesToDelete.Add(file);
+                        }
+                    }
 
-                    var preEncodeFiles = Directory.GetFiles(_tempFolder, "preencode_*.wav");
+                    string[] preEncodeFiles = Directory.GetFiles(_tempFolder, "preencode_*.wav");
                     Log($"📊 Found {preEncodeFiles.Length} pre-encode WAV files in temp");
-                    foreach (var file in preEncodeFiles)
+                    foreach (string file in preEncodeFiles)
+                    {
                         if (!filesToDelete.Contains(file))
+                        {
                             filesToDelete.Add(file);
+                        }
+                    }
 
-                    var tmpFiles = Directory.GetFiles(_tempFolder, "preencode_*.wav.tmp");
+                    string[] tmpFiles = Directory.GetFiles(_tempFolder, "preencode_*.wav.tmp");
                     Log($"📊 Found {tmpFiles.Length} pre-encode TMP files in temp");
-                    foreach (var file in tmpFiles)
+                    foreach (string file in tmpFiles)
+                    {
                         if (!filesToDelete.Contains(file))
+                        {
                             filesToDelete.Add(file);
+                        }
+                    }
                 }
 
                 Log($"📊 Total files to delete: {filesToDelete.Count}");
 
                 foreach (string? file in filesToDelete.Distinct())
                 {
-                    if (string.IsNullOrEmpty(file) || !File.Exists(file)) continue;
+                    if (string.IsNullOrEmpty(file) || !File.Exists(file))
+                    {
+                        continue;
+                    }
 
                     bool deleted = false;
                     for (int attempt = 0; attempt < 5 && !deleted; attempt++)
@@ -4421,7 +4717,9 @@ namespace Codec_Playground_H
                         {
                             string deleteMarker = file + ".delete";
                             if (!File.Exists(deleteMarker))
+                            {
                                 File.Create(deleteMarker).Close();
+                            }
                         }
                         catch { }
                     }
@@ -4533,7 +4831,7 @@ namespace Codec_Playground_H
                 {
                     filePath = null;
                     delay = 0;
-                    if (_entries.TryGetValue(key, out var entry) &&
+                    if (_entries.TryGetValue(key, out CacheEntry? entry) &&
                         !string.IsNullOrEmpty(entry.EncodedPath) &&
                         File.Exists(entry.EncodedPath))
                     {
@@ -4550,7 +4848,7 @@ namespace Codec_Playground_H
             {
                 lock (_lock)
                 {
-                    if (!_entries.TryGetValue(key, out var entry))
+                    if (!_entries.TryGetValue(key, out CacheEntry? entry))
                     {
                         entry = new CacheEntry();
                         _entries[key] = entry;
@@ -4566,7 +4864,7 @@ namespace Codec_Playground_H
                 lock (_lock)
                 {
                     samples = null!;
-                    if (_entries.TryGetValue(key, out var entry) && entry.DecodedSamples != null)
+                    if (_entries.TryGetValue(key, out CacheEntry? entry) && entry.DecodedSamples != null)
                     {
                         samples = entry.DecodedSamples;
                         return true;
@@ -4580,7 +4878,7 @@ namespace Codec_Playground_H
             {
                 lock (_lock)
                 {
-                    if (!_entries.TryGetValue(key, out var entry))
+                    if (!_entries.TryGetValue(key, out CacheEntry? entry))
                     {
                         entry = new CacheEntry();
                         _entries[key] = entry;
