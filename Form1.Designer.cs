@@ -104,13 +104,13 @@
             checkBoxCheckForUpdates = new CheckBox();
             timerTrackBarSeek = new System.Windows.Forms.Timer(components);
             tableLayoutPanelMain = new TableLayoutPanel();
+            panelSettings = new Panel();
+            groupBoxUserPresets = new GroupBox();
+            labelNoUpdates = new Label();
+            radioButton_Hidden_UserPreset_OFF = new RadioButton();
             panelPlayerControl = new Panel();
             groupBoxPlayerControl = new GroupBox();
             labelEncoderSettingsReturnedByMI = new Label();
-            panelSettings = new Panel();
-            groupBox1 = new GroupBox();
-            labelNoUpdates = new Label();
-            radioButton_Hidden_UserPreset_OFF = new RadioButton();
             groupBoxEncoders.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerEncodersAndAudioFlies).BeginInit();
             splitContainerEncodersAndAudioFlies.Panel1.SuspendLayout();
@@ -125,10 +125,10 @@
             ((System.ComponentModel.ISupportInitialize)trackBarParameter_q_MP3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).BeginInit();
             tableLayoutPanelMain.SuspendLayout();
+            panelSettings.SuspendLayout();
+            groupBoxUserPresets.SuspendLayout();
             panelPlayerControl.SuspendLayout();
             groupBoxPlayerControl.SuspendLayout();
-            panelSettings.SuspendLayout();
-            groupBox1.SuspendLayout();
             SuspendLayout();
             // 
             // groupBoxEncoders
@@ -180,6 +180,7 @@
             // 
             splitContainerEncodersAndAudioFlies.Dock = DockStyle.Fill;
             splitContainerEncodersAndAudioFlies.Location = new Point(6, 6);
+            splitContainerEncodersAndAudioFlies.MinimumSize = new Size(0, 165);
             splitContainerEncodersAndAudioFlies.Name = "splitContainerEncodersAndAudioFlies";
             // 
             // splitContainerEncodersAndAudioFlies.Panel1
@@ -201,7 +202,7 @@
             groupBoxAudioFiles.Location = new Point(0, 0);
             groupBoxAudioFiles.Name = "groupBoxAudioFiles";
             groupBoxAudioFiles.Size = new Size(419, 165);
-            groupBoxAudioFiles.TabIndex = 2;
+            groupBoxAudioFiles.TabIndex = 0;
             groupBoxAudioFiles.TabStop = false;
             groupBoxAudioFiles.Text = "Audio Files";
             // 
@@ -268,7 +269,7 @@
             groupBoxEncoderSettings.Location = new Point(3, 3);
             groupBoxEncoderSettings.Name = "groupBoxEncoderSettings";
             groupBoxEncoderSettings.Size = new Size(423, 229);
-            groupBoxEncoderSettings.TabIndex = 1;
+            groupBoxEncoderSettings.TabIndex = 0;
             groupBoxEncoderSettings.TabStop = false;
             groupBoxEncoderSettings.Text = "Encoder Settings";
             // 
@@ -503,7 +504,7 @@
             buttonSaveUserPreset6.Location = new Point(6, 180);
             buttonSaveUserPreset6.Name = "buttonSaveUserPreset6";
             buttonSaveUserPreset6.Size = new Size(24, 24);
-            buttonSaveUserPreset6.TabIndex = 12;
+            buttonSaveUserPreset6.TabIndex = 20;
             buttonSaveUserPreset6.Text = "💾";
             toolTip1.SetToolTip(buttonSaveUserPreset6, "Save current encoder settings to this preset");
             buttonSaveUserPreset6.UseVisualStyleBackColor = true;
@@ -515,7 +516,7 @@
             buttonSaveUserPreset5.Location = new Point(6, 148);
             buttonSaveUserPreset5.Name = "buttonSaveUserPreset5";
             buttonSaveUserPreset5.Size = new Size(24, 24);
-            buttonSaveUserPreset5.TabIndex = 12;
+            buttonSaveUserPreset5.TabIndex = 16;
             buttonSaveUserPreset5.Text = "💾";
             toolTip1.SetToolTip(buttonSaveUserPreset5, "Save current encoder settings to this preset");
             buttonSaveUserPreset5.UseVisualStyleBackColor = true;
@@ -539,7 +540,7 @@
             buttonSaveUserPreset3.Location = new Point(6, 84);
             buttonSaveUserPreset3.Name = "buttonSaveUserPreset3";
             buttonSaveUserPreset3.Size = new Size(24, 24);
-            buttonSaveUserPreset3.TabIndex = 12;
+            buttonSaveUserPreset3.TabIndex = 8;
             buttonSaveUserPreset3.Text = "💾";
             toolTip1.SetToolTip(buttonSaveUserPreset3, "Save current encoder settings to this preset");
             buttonSaveUserPreset3.UseVisualStyleBackColor = true;
@@ -551,7 +552,7 @@
             buttonSaveUserPreset2.Location = new Point(6, 52);
             buttonSaveUserPreset2.Name = "buttonSaveUserPreset2";
             buttonSaveUserPreset2.Size = new Size(24, 24);
-            buttonSaveUserPreset2.TabIndex = 12;
+            buttonSaveUserPreset2.TabIndex = 4;
             buttonSaveUserPreset2.Text = "💾";
             toolTip1.SetToolTip(buttonSaveUserPreset2, "Save current encoder settings to this preset");
             buttonSaveUserPreset2.UseVisualStyleBackColor = true;
@@ -563,7 +564,7 @@
             buttonSaveUserPreset1.Location = new Point(6, 20);
             buttonSaveUserPreset1.Name = "buttonSaveUserPreset1";
             buttonSaveUserPreset1.Size = new Size(24, 24);
-            buttonSaveUserPreset1.TabIndex = 12;
+            buttonSaveUserPreset1.TabIndex = 0;
             buttonSaveUserPreset1.Text = "💾";
             toolTip1.SetToolTip(buttonSaveUserPreset1, "Save current encoder settings to this preset");
             buttonSaveUserPreset1.UseVisualStyleBackColor = true;
@@ -574,42 +575,42 @@
             textBoxUserPreset6.Location = new Point(101, 180);
             textBoxUserPreset6.Name = "textBoxUserPreset6";
             textBoxUserPreset6.Size = new Size(280, 23);
-            textBoxUserPreset6.TabIndex = 3;
+            textBoxUserPreset6.TabIndex = 22;
             // 
             // textBoxUserPreset4
             // 
             textBoxUserPreset4.Location = new Point(101, 116);
             textBoxUserPreset4.Name = "textBoxUserPreset4";
             textBoxUserPreset4.Size = new Size(280, 23);
-            textBoxUserPreset4.TabIndex = 3;
+            textBoxUserPreset4.TabIndex = 14;
             // 
             // textBoxUserPreset5
             // 
             textBoxUserPreset5.Location = new Point(101, 148);
             textBoxUserPreset5.Name = "textBoxUserPreset5";
             textBoxUserPreset5.Size = new Size(280, 23);
-            textBoxUserPreset5.TabIndex = 3;
+            textBoxUserPreset5.TabIndex = 18;
             // 
             // textBoxUserPreset3
             // 
             textBoxUserPreset3.Location = new Point(101, 84);
             textBoxUserPreset3.Name = "textBoxUserPreset3";
             textBoxUserPreset3.Size = new Size(280, 23);
-            textBoxUserPreset3.TabIndex = 3;
+            textBoxUserPreset3.TabIndex = 10;
             // 
             // textBoxUserPreset2
             // 
             textBoxUserPreset2.Location = new Point(101, 52);
             textBoxUserPreset2.Name = "textBoxUserPreset2";
             textBoxUserPreset2.Size = new Size(280, 23);
-            textBoxUserPreset2.TabIndex = 3;
+            textBoxUserPreset2.TabIndex = 6;
             // 
             // textBoxUserPreset1
             // 
             textBoxUserPreset1.Location = new Point(101, 20);
             textBoxUserPreset1.Name = "textBoxUserPreset1";
             textBoxUserPreset1.Size = new Size(280, 23);
-            textBoxUserPreset1.TabIndex = 3;
+            textBoxUserPreset1.TabIndex = 2;
             // 
             // radioButtonUserPreset6
             // 
@@ -617,7 +618,7 @@
             radioButtonUserPreset6.Location = new Point(37, 182);
             radioButtonUserPreset6.Name = "radioButtonUserPreset6";
             radioButtonUserPreset6.Size = new Size(31, 19);
-            radioButtonUserPreset6.TabIndex = 1;
+            radioButtonUserPreset6.TabIndex = 21;
             radioButtonUserPreset6.Text = "6";
             toolTip1.SetToolTip(radioButtonUserPreset6, "Apply Preset (Ctrl+6)\r\n\r\n(Ctrl+Shift+6) random preset 1-6");
             radioButtonUserPreset6.UseVisualStyleBackColor = true;
@@ -629,7 +630,7 @@
             radioButtonUserPreset4.Location = new Point(37, 118);
             radioButtonUserPreset4.Name = "radioButtonUserPreset4";
             radioButtonUserPreset4.Size = new Size(31, 19);
-            radioButtonUserPreset4.TabIndex = 1;
+            radioButtonUserPreset4.TabIndex = 13;
             radioButtonUserPreset4.Text = "4";
             toolTip1.SetToolTip(radioButtonUserPreset4, "Apply Preset (Ctrl+4)\r\n\r\n(Ctrl+Shift+4) random preset 1-4");
             radioButtonUserPreset4.UseVisualStyleBackColor = true;
@@ -640,7 +641,7 @@
             buttonUserPreset6Clear.Location = new Point(387, 180);
             buttonUserPreset6Clear.Name = "buttonUserPreset6Clear";
             buttonUserPreset6Clear.Size = new Size(23, 23);
-            buttonUserPreset6Clear.TabIndex = 0;
+            buttonUserPreset6Clear.TabIndex = 23;
             buttonUserPreset6Clear.Text = "❌";
             toolTip1.SetToolTip(buttonUserPreset6Clear, "Clear Preset");
             buttonUserPreset6Clear.UseVisualStyleBackColor = true;
@@ -651,7 +652,7 @@
             buttonUserPreset4Clear.Location = new Point(387, 116);
             buttonUserPreset4Clear.Name = "buttonUserPreset4Clear";
             buttonUserPreset4Clear.Size = new Size(23, 23);
-            buttonUserPreset4Clear.TabIndex = 0;
+            buttonUserPreset4Clear.TabIndex = 15;
             buttonUserPreset4Clear.Text = "❌";
             toolTip1.SetToolTip(buttonUserPreset4Clear, "Clear Preset");
             buttonUserPreset4Clear.UseVisualStyleBackColor = true;
@@ -663,7 +664,7 @@
             radioButtonUserPreset5.Location = new Point(37, 150);
             radioButtonUserPreset5.Name = "radioButtonUserPreset5";
             radioButtonUserPreset5.Size = new Size(31, 19);
-            radioButtonUserPreset5.TabIndex = 1;
+            radioButtonUserPreset5.TabIndex = 17;
             radioButtonUserPreset5.Text = "5";
             toolTip1.SetToolTip(radioButtonUserPreset5, "Apply Preset (Ctrl+5)\r\n\r\n(Ctrl+Shift+5) random preset 1-5");
             radioButtonUserPreset5.UseVisualStyleBackColor = true;
@@ -674,7 +675,7 @@
             buttonUserPreset5Clear.Location = new Point(387, 148);
             buttonUserPreset5Clear.Name = "buttonUserPreset5Clear";
             buttonUserPreset5Clear.Size = new Size(23, 23);
-            buttonUserPreset5Clear.TabIndex = 0;
+            buttonUserPreset5Clear.TabIndex = 19;
             buttonUserPreset5Clear.Text = "❌";
             toolTip1.SetToolTip(buttonUserPreset5Clear, "Clear Preset");
             buttonUserPreset5Clear.UseVisualStyleBackColor = true;
@@ -686,7 +687,7 @@
             radioButtonUserPreset3.Location = new Point(37, 86);
             radioButtonUserPreset3.Name = "radioButtonUserPreset3";
             radioButtonUserPreset3.Size = new Size(31, 19);
-            radioButtonUserPreset3.TabIndex = 1;
+            radioButtonUserPreset3.TabIndex = 9;
             radioButtonUserPreset3.Text = "3";
             toolTip1.SetToolTip(radioButtonUserPreset3, "Apply Preset (Ctrl+3)\r\n\r\n(Ctrl+Shift+3) random preset 1-3");
             radioButtonUserPreset3.UseVisualStyleBackColor = true;
@@ -697,7 +698,7 @@
             buttonUserPreset3Clear.Location = new Point(387, 84);
             buttonUserPreset3Clear.Name = "buttonUserPreset3Clear";
             buttonUserPreset3Clear.Size = new Size(23, 23);
-            buttonUserPreset3Clear.TabIndex = 0;
+            buttonUserPreset3Clear.TabIndex = 11;
             buttonUserPreset3Clear.Text = "❌";
             toolTip1.SetToolTip(buttonUserPreset3Clear, "Clear Preset");
             buttonUserPreset3Clear.UseVisualStyleBackColor = true;
@@ -709,7 +710,7 @@
             radioButtonUserPreset2.Location = new Point(37, 54);
             radioButtonUserPreset2.Name = "radioButtonUserPreset2";
             radioButtonUserPreset2.Size = new Size(31, 19);
-            radioButtonUserPreset2.TabIndex = 1;
+            radioButtonUserPreset2.TabIndex = 5;
             radioButtonUserPreset2.Text = "2";
             toolTip1.SetToolTip(radioButtonUserPreset2, "Apply Preset (Ctrl+2)\r\n\r\n(Ctrl+Shift+2) random preset 1-2");
             radioButtonUserPreset2.UseVisualStyleBackColor = true;
@@ -732,7 +733,7 @@
             buttonUserPreset2Clear.Location = new Point(387, 52);
             buttonUserPreset2Clear.Name = "buttonUserPreset2Clear";
             buttonUserPreset2Clear.Size = new Size(23, 23);
-            buttonUserPreset2Clear.TabIndex = 0;
+            buttonUserPreset2Clear.TabIndex = 7;
             buttonUserPreset2Clear.Text = "❌";
             toolTip1.SetToolTip(buttonUserPreset2Clear, "Clear Preset");
             buttonUserPreset2Clear.UseVisualStyleBackColor = true;
@@ -743,7 +744,7 @@
             buttonUserPreset1Clear.Location = new Point(387, 20);
             buttonUserPreset1Clear.Name = "buttonUserPreset1Clear";
             buttonUserPreset1Clear.Size = new Size(23, 23);
-            buttonUserPreset1Clear.TabIndex = 0;
+            buttonUserPreset1Clear.TabIndex = 3;
             buttonUserPreset1Clear.Text = "❌";
             toolTip1.SetToolTip(buttonUserPreset1Clear, "Clear Preset");
             buttonUserPreset1Clear.UseVisualStyleBackColor = true;
@@ -768,7 +769,7 @@
             trackBarMixBalance.Maximum = 100;
             trackBarMixBalance.Name = "trackBarMixBalance";
             trackBarMixBalance.Size = new Size(157, 45);
-            trackBarMixBalance.TabIndex = 12;
+            trackBarMixBalance.TabIndex = 5;
             trackBarMixBalance.TickStyle = TickStyle.None;
             trackBarMixBalance.Value = 50;
             trackBarMixBalance.Visible = false;
@@ -781,7 +782,7 @@
             radioButtonPlayMix.Location = new Point(6, 118);
             radioButtonPlayMix.Name = "radioButtonPlayMix";
             radioButtonPlayMix.Size = new Size(45, 19);
-            radioButtonPlayMix.TabIndex = 11;
+            radioButtonPlayMix.TabIndex = 4;
             radioButtonPlayMix.Text = "Mix";
             radioButtonPlayMix.UseVisualStyleBackColor = true;
             radioButtonPlayMix.CheckedChanged += RadioPlaySource_CheckedChanged;
@@ -790,7 +791,7 @@
             // 
             progressBarEncodingProcess.Location = new Point(83, 84);
             progressBarEncodingProcess.Name = "progressBarEncodingProcess";
-            progressBarEncodingProcess.Size = new Size(286, 23);
+            progressBarEncodingProcess.Size = new Size(331, 23);
             progressBarEncodingProcess.TabIndex = 6;
             progressBarEncodingProcess.Visible = false;
             // 
@@ -799,7 +800,7 @@
             buttonLoopPlayback.Location = new Point(6, 200);
             buttonLoopPlayback.Name = "buttonLoopPlayback";
             buttonLoopPlayback.Size = new Size(70, 23);
-            buttonLoopPlayback.TabIndex = 9;
+            buttonLoopPlayback.TabIndex = 7;
             buttonLoopPlayback.Text = "Loop: ON";
             buttonLoopPlayback.UseVisualStyleBackColor = true;
             buttonLoopPlayback.Click += ButtonLoopPlayback_Click;
@@ -810,7 +811,7 @@
             radioButtonPlayDifference.Location = new Point(6, 150);
             radioButtonPlayDifference.Name = "radioButtonPlayDifference";
             radioButtonPlayDifference.Size = new Size(79, 19);
-            radioButtonPlayDifference.TabIndex = 5;
+            radioButtonPlayDifference.TabIndex = 6;
             radioButtonPlayDifference.Text = "Difference";
             radioButtonPlayDifference.UseVisualStyleBackColor = true;
             radioButtonPlayDifference.CheckedChanged += RadioPlaySource_CheckedChanged;
@@ -821,7 +822,7 @@
             radioButtonPlayEncoded.Location = new Point(6, 86);
             radioButtonPlayEncoded.Name = "radioButtonPlayEncoded";
             radioButtonPlayEncoded.Size = new Size(71, 19);
-            radioButtonPlayEncoded.TabIndex = 4;
+            radioButtonPlayEncoded.TabIndex = 3;
             radioButtonPlayEncoded.Text = "Encoded";
             radioButtonPlayEncoded.UseVisualStyleBackColor = true;
             radioButtonPlayEncoded.CheckedChanged += RadioPlaySource_CheckedChanged;
@@ -833,7 +834,7 @@
             radioButtonPlayOriginal.Location = new Point(6, 54);
             radioButtonPlayOriginal.Name = "radioButtonPlayOriginal";
             radioButtonPlayOriginal.Size = new Size(67, 19);
-            radioButtonPlayOriginal.TabIndex = 3;
+            radioButtonPlayOriginal.TabIndex = 2;
             radioButtonPlayOriginal.TabStop = true;
             radioButtonPlayOriginal.Text = "Original";
             radioButtonPlayOriginal.UseVisualStyleBackColor = true;
@@ -844,7 +845,7 @@
             buttonPlayPause.Location = new Point(6, 22);
             buttonPlayPause.Name = "buttonPlayPause";
             buttonPlayPause.Size = new Size(25, 23);
-            buttonPlayPause.TabIndex = 1;
+            buttonPlayPause.TabIndex = 0;
             buttonPlayPause.Text = "▶";
             buttonPlayPause.UseVisualStyleBackColor = true;
             buttonPlayPause.Click += ButtonPlayPause_Click;
@@ -854,7 +855,7 @@
             buttonStop.Location = new Point(37, 22);
             buttonStop.Name = "buttonStop";
             buttonStop.Size = new Size(25, 23);
-            buttonStop.TabIndex = 2;
+            buttonStop.TabIndex = 1;
             buttonStop.Text = "■";
             buttonStop.UseVisualStyleBackColor = true;
             buttonStop.Click += ButtonStop_Click;
@@ -864,7 +865,7 @@
             buttonClearEncoders.Location = new Point(188, 200);
             buttonClearEncoders.Name = "buttonClearEncoders";
             buttonClearEncoders.Size = new Size(110, 23);
-            buttonClearEncoders.TabIndex = 10;
+            buttonClearEncoders.TabIndex = 8;
             buttonClearEncoders.Text = "Clear Encoders";
             buttonClearEncoders.UseVisualStyleBackColor = true;
             buttonClearEncoders.Click += ButtonClear_Click;
@@ -874,7 +875,7 @@
             buttonClearAudioFiles.Location = new Point(304, 200);
             buttonClearAudioFiles.Name = "buttonClearAudioFiles";
             buttonClearAudioFiles.Size = new Size(110, 23);
-            buttonClearAudioFiles.TabIndex = 10;
+            buttonClearAudioFiles.TabIndex = 9;
             buttonClearAudioFiles.Text = "Clear Audio Files";
             buttonClearAudioFiles.UseVisualStyleBackColor = true;
             buttonClearAudioFiles.Click += ButtonClear_Click;
@@ -900,7 +901,7 @@
             checkBoxCheckForUpdates.Location = new Point(293, 206);
             checkBoxCheckForUpdates.Name = "checkBoxCheckForUpdates";
             checkBoxCheckForUpdates.Size = new Size(122, 19);
-            checkBoxCheckForUpdates.TabIndex = 13;
+            checkBoxCheckForUpdates.TabIndex = 24;
             checkBoxCheckForUpdates.Text = "Check for updates";
             toolTip1.SetToolTip(checkBoxCheckForUpdates, "May not work yet (development of this feature is in progress)");
             checkBoxCheckForUpdates.UseVisualStyleBackColor = true;
@@ -914,11 +915,12 @@
             // 
             tableLayoutPanelMain.ColumnCount = 1;
             tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanelMain.Controls.Add(panelPlayerControl, 0, 2);
             tableLayoutPanelMain.Controls.Add(splitContainerEncodersAndAudioFlies, 0, 0);
             tableLayoutPanelMain.Controls.Add(panelSettings, 0, 1);
+            tableLayoutPanelMain.Controls.Add(panelPlayerControl, 0, 2);
             tableLayoutPanelMain.Dock = DockStyle.Fill;
             tableLayoutPanelMain.Location = new Point(0, 0);
+            tableLayoutPanelMain.MinimumSize = new Size(0, 647);
             tableLayoutPanelMain.Name = "tableLayoutPanelMain";
             tableLayoutPanelMain.Padding = new Padding(3);
             tableLayoutPanelMain.RowCount = 3;
@@ -926,96 +928,54 @@
             tableLayoutPanelMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 235F));
             tableLayoutPanelMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 235F));
             tableLayoutPanelMain.Size = new Size(858, 647);
-            tableLayoutPanelMain.TabIndex = 3;
-            // 
-            // panelPlayerControl
-            // 
-            panelPlayerControl.Controls.Add(groupBoxPlayerControl);
-            panelPlayerControl.Dock = DockStyle.Fill;
-            panelPlayerControl.Location = new Point(3, 409);
-            panelPlayerControl.Margin = new Padding(0);
-            panelPlayerControl.Name = "panelPlayerControl";
-            panelPlayerControl.Size = new Size(852, 235);
-            panelPlayerControl.TabIndex = 14;
-            // 
-            // groupBoxPlayerControl
-            // 
-            groupBoxPlayerControl.Controls.Add(labelEncoderSettingsReturnedByMI);
-            groupBoxPlayerControl.Controls.Add(buttonPlayPause);
-            groupBoxPlayerControl.Controls.Add(labelMixBalance);
-            groupBoxPlayerControl.Controls.Add(buttonClearAudioFiles);
-            groupBoxPlayerControl.Controls.Add(radioButtonPlayMix);
-            groupBoxPlayerControl.Controls.Add(buttonClearEncoders);
-            groupBoxPlayerControl.Controls.Add(buttonStop);
-            groupBoxPlayerControl.Controls.Add(progressBarEncodingProcess);
-            groupBoxPlayerControl.Controls.Add(radioButtonPlayOriginal);
-            groupBoxPlayerControl.Controls.Add(buttonLoopPlayback);
-            groupBoxPlayerControl.Controls.Add(radioButtonPlayEncoded);
-            groupBoxPlayerControl.Controls.Add(radioButtonPlayDifference);
-            groupBoxPlayerControl.Controls.Add(waveformSeek);
-            groupBoxPlayerControl.Controls.Add(trackBarMixBalance);
-            groupBoxPlayerControl.Location = new Point(3, 3);
-            groupBoxPlayerControl.Name = "groupBoxPlayerControl";
-            groupBoxPlayerControl.Size = new Size(420, 229);
-            groupBoxPlayerControl.TabIndex = 14;
-            groupBoxPlayerControl.TabStop = false;
-            groupBoxPlayerControl.Text = "Player control";
-            // 
-            // labelEncoderSettingsReturnedByMI
-            // 
-            labelEncoderSettingsReturnedByMI.AutoSize = true;
-            labelEncoderSettingsReturnedByMI.Location = new Point(85, 88);
-            labelEncoderSettingsReturnedByMI.Name = "labelEncoderSettingsReturnedByMI";
-            labelEncoderSettingsReturnedByMI.Size = new Size(283, 15);
-            labelEncoderSettingsReturnedByMI.TabIndex = 14;
-            labelEncoderSettingsReturnedByMI.Text = "Here's the params string Encoder returnes (if it does)";
+            tableLayoutPanelMain.TabIndex = 0;
             // 
             // panelSettings
             // 
-            panelSettings.Controls.Add(groupBox1);
             panelSettings.Controls.Add(groupBoxEncoderSettings);
+            panelSettings.Controls.Add(groupBoxUserPresets);
             panelSettings.Dock = DockStyle.Fill;
             panelSettings.Location = new Point(3, 174);
             panelSettings.Margin = new Padding(0);
             panelSettings.Name = "panelSettings";
             panelSettings.Size = new Size(852, 235);
-            panelSettings.TabIndex = 16;
+            panelSettings.TabIndex = 0;
             // 
-            // groupBox1
+            // groupBoxUserPresets
             // 
-            groupBox1.Controls.Add(labelNoUpdates);
-            groupBox1.Controls.Add(checkBoxCheckForUpdates);
-            groupBox1.Controls.Add(buttonSaveUserPreset1);
-            groupBox1.Controls.Add(buttonUserPreset1Clear);
-            groupBox1.Controls.Add(buttonUserPreset2Clear);
-            groupBox1.Controls.Add(buttonSaveUserPreset6);
-            groupBox1.Controls.Add(radioButtonUserPreset1);
-            groupBox1.Controls.Add(buttonSaveUserPreset5);
-            groupBox1.Controls.Add(radioButtonUserPreset2);
-            groupBox1.Controls.Add(buttonSaveUserPreset4);
-            groupBox1.Controls.Add(buttonUserPreset3Clear);
-            groupBox1.Controls.Add(buttonSaveUserPreset3);
-            groupBox1.Controls.Add(radioButtonUserPreset3);
-            groupBox1.Controls.Add(buttonSaveUserPreset2);
-            groupBox1.Controls.Add(buttonUserPreset5Clear);
-            groupBox1.Controls.Add(radioButtonUserPreset5);
-            groupBox1.Controls.Add(textBoxUserPreset6);
-            groupBox1.Controls.Add(buttonUserPreset4Clear);
-            groupBox1.Controls.Add(textBoxUserPreset4);
-            groupBox1.Controls.Add(buttonUserPreset6Clear);
-            groupBox1.Controls.Add(radioButtonUserPreset4);
-            groupBox1.Controls.Add(textBoxUserPreset5);
-            groupBox1.Controls.Add(radioButton_Hidden_UserPreset_OFF);
-            groupBox1.Controls.Add(radioButtonUserPreset6);
-            groupBox1.Controls.Add(textBoxUserPreset1);
-            groupBox1.Controls.Add(textBoxUserPreset3);
-            groupBox1.Controls.Add(textBoxUserPreset2);
-            groupBox1.Location = new Point(432, 3);
-            groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(417, 229);
-            groupBox1.TabIndex = 14;
-            groupBox1.TabStop = false;
-            groupBox1.Text = "User Presets / Custom Settings";
+            groupBoxUserPresets.Controls.Add(labelNoUpdates);
+            groupBoxUserPresets.Controls.Add(checkBoxCheckForUpdates);
+            groupBoxUserPresets.Controls.Add(buttonSaveUserPreset1);
+            groupBoxUserPresets.Controls.Add(buttonUserPreset1Clear);
+            groupBoxUserPresets.Controls.Add(buttonUserPreset2Clear);
+            groupBoxUserPresets.Controls.Add(buttonSaveUserPreset6);
+            groupBoxUserPresets.Controls.Add(radioButtonUserPreset1);
+            groupBoxUserPresets.Controls.Add(buttonSaveUserPreset5);
+            groupBoxUserPresets.Controls.Add(radioButtonUserPreset2);
+            groupBoxUserPresets.Controls.Add(buttonSaveUserPreset4);
+            groupBoxUserPresets.Controls.Add(buttonUserPreset3Clear);
+            groupBoxUserPresets.Controls.Add(buttonSaveUserPreset3);
+            groupBoxUserPresets.Controls.Add(radioButtonUserPreset3);
+            groupBoxUserPresets.Controls.Add(buttonSaveUserPreset2);
+            groupBoxUserPresets.Controls.Add(buttonUserPreset5Clear);
+            groupBoxUserPresets.Controls.Add(radioButtonUserPreset5);
+            groupBoxUserPresets.Controls.Add(textBoxUserPreset6);
+            groupBoxUserPresets.Controls.Add(buttonUserPreset4Clear);
+            groupBoxUserPresets.Controls.Add(textBoxUserPreset4);
+            groupBoxUserPresets.Controls.Add(buttonUserPreset6Clear);
+            groupBoxUserPresets.Controls.Add(radioButtonUserPreset4);
+            groupBoxUserPresets.Controls.Add(textBoxUserPreset5);
+            groupBoxUserPresets.Controls.Add(radioButton_Hidden_UserPreset_OFF);
+            groupBoxUserPresets.Controls.Add(radioButtonUserPreset6);
+            groupBoxUserPresets.Controls.Add(textBoxUserPreset1);
+            groupBoxUserPresets.Controls.Add(textBoxUserPreset3);
+            groupBoxUserPresets.Controls.Add(textBoxUserPreset2);
+            groupBoxUserPresets.Location = new Point(432, 3);
+            groupBoxUserPresets.Name = "groupBoxUserPresets";
+            groupBoxUserPresets.Size = new Size(417, 229);
+            groupBoxUserPresets.TabIndex = 0;
+            groupBoxUserPresets.TabStop = false;
+            groupBoxUserPresets.Text = "User Presets / Custom Settings";
             // 
             // labelNoUpdates
             // 
@@ -1040,6 +1000,49 @@
             radioButton_Hidden_UserPreset_OFF.UseVisualStyleBackColor = true;
             radioButton_Hidden_UserPreset_OFF.Visible = false;
             radioButton_Hidden_UserPreset_OFF.CheckedChanged += RadioButtonMode_CheckedChanged;
+            // 
+            // panelPlayerControl
+            // 
+            panelPlayerControl.Controls.Add(groupBoxPlayerControl);
+            panelPlayerControl.Dock = DockStyle.Fill;
+            panelPlayerControl.Location = new Point(3, 409);
+            panelPlayerControl.Margin = new Padding(0);
+            panelPlayerControl.Name = "panelPlayerControl";
+            panelPlayerControl.Size = new Size(852, 235);
+            panelPlayerControl.TabIndex = 0;
+            // 
+            // groupBoxPlayerControl
+            // 
+            groupBoxPlayerControl.Controls.Add(labelEncoderSettingsReturnedByMI);
+            groupBoxPlayerControl.Controls.Add(buttonPlayPause);
+            groupBoxPlayerControl.Controls.Add(labelMixBalance);
+            groupBoxPlayerControl.Controls.Add(buttonClearAudioFiles);
+            groupBoxPlayerControl.Controls.Add(radioButtonPlayMix);
+            groupBoxPlayerControl.Controls.Add(buttonClearEncoders);
+            groupBoxPlayerControl.Controls.Add(buttonStop);
+            groupBoxPlayerControl.Controls.Add(progressBarEncodingProcess);
+            groupBoxPlayerControl.Controls.Add(radioButtonPlayOriginal);
+            groupBoxPlayerControl.Controls.Add(buttonLoopPlayback);
+            groupBoxPlayerControl.Controls.Add(radioButtonPlayEncoded);
+            groupBoxPlayerControl.Controls.Add(radioButtonPlayDifference);
+            groupBoxPlayerControl.Controls.Add(waveformSeek);
+            groupBoxPlayerControl.Controls.Add(trackBarMixBalance);
+            groupBoxPlayerControl.Location = new Point(3, 3);
+            groupBoxPlayerControl.Name = "groupBoxPlayerControl";
+            groupBoxPlayerControl.Size = new Size(420, 229);
+            groupBoxPlayerControl.TabIndex = 0;
+            groupBoxPlayerControl.TabStop = false;
+            groupBoxPlayerControl.Text = "Player control";
+            // 
+            // labelEncoderSettingsReturnedByMI
+            // 
+            labelEncoderSettingsReturnedByMI.AutoSize = true;
+            labelEncoderSettingsReturnedByMI.Location = new Point(85, 88);
+            labelEncoderSettingsReturnedByMI.Name = "labelEncoderSettingsReturnedByMI";
+            labelEncoderSettingsReturnedByMI.Size = new Size(283, 15);
+            labelEncoderSettingsReturnedByMI.TabIndex = 14;
+            labelEncoderSettingsReturnedByMI.Text = "Here's the params string Encoder returnes (if it does)";
+            labelEncoderSettingsReturnedByMI.Visible = false;
             // 
             // Form1
             // 
@@ -1072,12 +1075,12 @@
             ((System.ComponentModel.ISupportInitialize)trackBarParameter_q_MP3).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackBarMixBalance).EndInit();
             tableLayoutPanelMain.ResumeLayout(false);
+            panelSettings.ResumeLayout(false);
+            groupBoxUserPresets.ResumeLayout(false);
+            groupBoxUserPresets.PerformLayout();
             panelPlayerControl.ResumeLayout(false);
             groupBoxPlayerControl.ResumeLayout(false);
             groupBoxPlayerControl.PerformLayout();
-            panelSettings.ResumeLayout(false);
-            groupBox1.ResumeLayout(false);
-            groupBox1.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -1157,7 +1160,7 @@
         private Button buttonSaveUserPreset4;
         private Button buttonSaveUserPreset3;
         private Button buttonSaveUserPreset2;
-        private GroupBox groupBox1;
+        private GroupBox groupBoxUserPresets;
         private RadioButton radioButton_Hidden_Mode_OFF_MP3;
         private RadioButton radioButton_Hidden_UserPreset_OFF;
         private CheckBox checkBoxCheckForUpdates;

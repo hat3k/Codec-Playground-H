@@ -15,7 +15,7 @@ namespace Codec_Playground_H
 {
     public partial class Form1 : Form
     {
-        private const string APP_VERSION = "2026.08.10";
+        private const string APP_VERSION = "2026.08.21";
         private const string REPO_OWNER = "hat3k";
         private const string REPO_NAME = "Codec-Playground-H";
         private const string RELEASES_URL = $"https://github.com/{REPO_OWNER}/{REPO_NAME}/releases";
